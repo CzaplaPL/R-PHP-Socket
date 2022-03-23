@@ -1,0 +1,16 @@
+{
+    "name": "czapla/r_php_socket",
+    "description": "library for rsocket",
+    "type": "library",
+    "require": {
+        "phpunit/phpunit": "^9.5"
+    },
+    "license": "MIT License",
+    "authors": [
+        {
+            "name": "czapla",
+            "email": "poczta.czapla.pl@gmail.com"
+        }
+    ],
+    "minimum-stability": "stable"
+}
