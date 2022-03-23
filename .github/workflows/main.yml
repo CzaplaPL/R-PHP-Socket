@@ -1,5 +1,11 @@
-name: A workflow for my Hello World file
-on: push
+name: A workflow for R-PHP-Socket
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
 
 jobs:
   build:
