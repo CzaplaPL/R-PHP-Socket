@@ -9,10 +9,22 @@ on:
 
 jobs:
   build:
-    name: Hello world action
+    name: PHP CS Fixer
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: ./action-a
+      - name: "Checkout repository"
+        uses: "actions/checkout@v2"
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
         with:
-          MY_NAME: "Mona"
+          php-version: "latest"
+          coverage: "none"
+
+      - name: "Install dependencies (Composer)"
+        uses: "ramsey/composer-install@v2"
+
+      - name: "Check syntax (php-cs-fixer)"
+        shell: "bash"
+        run: "make phpcsfixer"
+
