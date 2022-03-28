@@ -23,7 +23,7 @@ jobs:
 
       - name: "Install dependencies (Composer)"
         shell: "bash"
-        run: "composer install"
+        run: "composer install --ignore-platform-reqs"
 
       - name: "Check syntax (php-cs-fixer)"
         shell: "bash"
