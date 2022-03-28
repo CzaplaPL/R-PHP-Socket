@@ -22,7 +22,7 @@ jobs:
           coverage: "none"
 
       - name: "Install dependencies (Composer)"
-        uses: "ramsey/composer-install@v2"
+        uses: "composer install"
 
       - name: "Check syntax (php-cs-fixer)"
         shell: "bash"
