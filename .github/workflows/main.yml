@@ -22,7 +22,8 @@ jobs:
           coverage: "none"
 
       - name: "Install dependencies (Composer)"
-        uses: "composer install"
+        shell: "bash"
+        run: "composer install"
 
       - name: "Check syntax (php-cs-fixer)"
         shell: "bash"
