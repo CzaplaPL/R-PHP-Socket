@@ -2,9 +2,6 @@
     "name": "czapla/r_php_socket",
     "description": "library for rsocket",
     "type": "library",
-    "require": {
-        "phpunit/phpunit": "^9.5"
-    },
     "license": "MIT License",
     "authors": [
         {
@@ -12,8 +9,26 @@
             "email": "poczta.czapla.pl@gmail.com"
         }
     ],
+    "config": {
+        "optimize-autoloader": true,
+        "preferred-install": {
+            "*": "dist"
+        },
+        "sort-packages": true
+    },
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "App\\Tests\\": "tests/"
+        }
+    },
     "minimum-stability": "stable",
     "require-dev": {
-        "friendsofphp/php-cs-fixer": "^3.8"
+        "friendsofphp/php-cs-fixer": "^3.8",
+        "phpunit/phpunit": "9"
     }
 }

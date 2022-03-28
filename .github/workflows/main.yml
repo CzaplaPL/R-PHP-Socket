@@ -28,3 +28,7 @@ jobs:
         shell: "bash"
         run: "make phpcsfixer"
 
+      - name: "Check unitTest (phpUnit)"
+        shell: "bash"
+        run: "make unitTest"
+
