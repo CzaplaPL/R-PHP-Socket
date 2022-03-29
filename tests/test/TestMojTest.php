@@ -8,11 +8,18 @@ use PHPUnit\Framework\TestCase;
 
 class TestMojTest extends TestCase
 {
-    public function testBeCreatedFromValidEmailAddress(): void
+    final public function testBeCreatedFromValidEmailAddress(): void
     {
         $this->assertInstanceOf(
             TestMoj::class,
             new TestMoj(2)
         );
+    }
+
+    final public function testAdd(): void
+    {
+        $obj = new TestMoj(2);
+        $obj->setTest2(1);
+        $this->assertEquals(2, $obj->getTest());
     }
 }

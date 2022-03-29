@@ -3,6 +3,9 @@
 /vendor/
 /.idea
 
+/coverage
+infection.html
+
 ###> friendsofphp/php-cs-fixer ###
 /.php-cs-fixer.php
 /.php-cs-fixer.cache
