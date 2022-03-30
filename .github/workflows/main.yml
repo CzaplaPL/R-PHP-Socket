@@ -37,7 +37,7 @@ jobs:
         shell: "bash"
         run: "make psalm"
 
-      - name: "Check psalm "
+      - name: "Check messDetector "
         shell: "bash"
         run: "make messDetector"
   tests:
