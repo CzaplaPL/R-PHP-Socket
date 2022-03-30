@@ -36,6 +36,10 @@ jobs:
       - name: "Check psalm "
         shell: "bash"
         run: "make psalm"
+
+      - name: "Check psalm "
+        shell: "bash"
+        run: "make messDetector"
   tests:
     name: PHP test code
     runs-on: ubuntu-latest

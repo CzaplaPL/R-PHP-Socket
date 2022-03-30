@@ -8,3 +8,5 @@ phpstan:
 	 php  vendor/bin/phpstan analyse src tests -l 9
 psalm:
 	 php  ./vendor/bin/psalm --no-cache
+messDetector:
+	 php vendor\bin\phpmd src\test\TestMoj.php html  cleancode,codesize,controversial,design,naming,unusedcode
