@@ -1,12 +1,64 @@
-name: A workflow for my Hello World file
-on: push
+name: A workflow for R-PHP-Socket
+on:
+  push:
+    branches:
+      - "main"
+  pull_request:
+    branches:
+      - "main"
 
 jobs:
-  build:
-    name: Hello world action
+  static-analysis:
+    name: PHP Cheack code
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v1
-      - uses: ./action-a
+      - name: "Checkout repository"
+        uses: "actions/checkout@v2"
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
         with:
-          MY_NAME: "Mona"
+          php-version: "latest"
+          coverage: "none"
+
+      - name: "Install dependencies (Composer)"
+        shell: "bash"
+        run: "composer install --ignore-platform-reqs"
+
+      - name: "Check syntax (php-cs-fixer)"
+        shell: "bash"
+        run: "make phpcsfixer"
+
+      - name: "Check phpstan "
+        shell: "bash"
+        run: "make phpstan"
+
+      - name: "Check psalm "
+        shell: "bash"
+        run: "make psalm"
+
+      - name: "Check messDetector "
+        shell: "bash"
+        run: "make messDetector"
+  tests:
+    name: PHP test code
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v2"
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          php-version: "latest"
+          coverage: "none"
+
+      - name: "Install dependencies (Composer)"
+        shell: "bash"
+        run: "composer install --ignore-platform-reqs"
+
+      - name: "Check unitTest (phpUnit)"
+        shell: "bash"
+        run: "make unitTest"
+
+
