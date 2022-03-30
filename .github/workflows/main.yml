@@ -29,6 +29,14 @@ jobs:
         shell: "bash"
         run: "make phpcsfixer"
 
+      - name: "Check phpstan "
+        shell: "bash"
+        run: "make phpstan"
+
+      - name: "Check psalm "
+        shell: "bash"
+        run: "make psalm"
+
       - name: "Check unitTest (phpUnit)"
         shell: "bash"
         run: "make unitTest"
