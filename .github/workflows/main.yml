@@ -8,8 +8,8 @@ on:
       - "main"
 
 jobs:
-  build:
-    name: PHP CS Fixer
+  static-analysis:
+    name: PHP Cheack code
     runs-on: ubuntu-latest
     steps:
       - name: "Checkout repository"
@@ -36,8 +36,25 @@ jobs:
       - name: "Check psalm "
         shell: "bash"
         run: "make psalm"
+  tests:
+    name: PHP test code
+    runs-on: ubuntu-latest
+    steps:
+      - name: "Checkout repository"
+        uses: "actions/checkout@v2"
+
+      - name: "Install PHP"
+        uses: "shivammathur/setup-php@v2"
+        with:
+          php-version: "latest"
+          coverage: "none"
+
+      - name: "Install dependencies (Composer)"
+        shell: "bash"
+        run: "composer install --ignore-platform-reqs"
 
       - name: "Check unitTest (phpUnit)"
         shell: "bash"
         run: "make unitTest"
+
 
