@@ -60,5 +60,8 @@ jobs:
       - name: "Check unitTest (phpUnit)"
         shell: "bash"
         run: "make unitTest"
+      - name: "Check mutations (phpUnit)"
+        shell: "bash"
+        run: "make infection"
 
 
