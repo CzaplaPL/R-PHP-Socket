@@ -29,10 +29,15 @@
     "minimum-stability": "stable",
     "require-dev": {
         "bmitch/churn-php": "^1.6",
+        "clue/block-react": "1.5",
         "friendsofphp/php-cs-fixer": "^3.8",
+        "jetbrains/phpstorm-attributes": "^1.0",
         "phpmd/phpmd": "^2.12",
         "phpstan/phpstan": "^1.5",
         "phpunit/phpunit": "9.5.20",
         "vimeo/psalm": "^4.22"
+    },
+    "require": {
+        "react/socket": "1.11"
     }
 }
