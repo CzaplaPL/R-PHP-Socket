@@ -9,6 +9,6 @@ phpstan:
 psalm:
 	 php  ./vendor/bin/psalm --no-cache
 messDetector:
-	 php vendor/bin/phpmd src text cleancode,codesize,controversial,design,naming,unusedcode
+	 php vendor/bin/phpmd src text cleancode,codesize,controversial,design,naming,unusedcode --exclude *src/Core/Enums/*
 infection:
-	 php vendor/bin/infection --initial-tests-php-options="-d zend_extension=xdebug.so"
+	 php vendor/bin/infection --initial-tests-php-options="-d zend_extension=xdebug.so" 
