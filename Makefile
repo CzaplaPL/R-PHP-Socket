@@ -9,6 +9,6 @@ phpstan:
 psalm:
 	 php  ./vendor/bin/psalm --no-cache
 messDetector:
-	 php vendor/bin/phpmd src cleancode,codesize,controversial,design,naming,unusedcode
+	 php vendor/bin/phpmd src text cleancode,codesize,controversial,design,naming,unusedcode
 infection:
 	 php vendor/bin/infection
