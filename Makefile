@@ -11,4 +11,4 @@ psalm:
 messDetector:
 	 php vendor/bin/phpmd src text cleancode,codesize,controversial,design,naming,unusedcode
 infection:
-	 php vendor/bin/infection
+	 php vendor/bin/infection --initial-tests-php-options="-d zend_extension=xdebug.so"
