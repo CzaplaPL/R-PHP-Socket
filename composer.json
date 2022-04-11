@@ -14,7 +14,10 @@
         "preferred-install": {
             "*": "dist"
         },
-        "sort-packages": true
+        "sort-packages": true,
+        "allow-plugins": {
+            "infection/extension-installer": true
+        }
     },
     "autoload": {
         "psr-4": {
@@ -31,6 +34,7 @@
         "bmitch/churn-php": "^1.6",
         "clue/block-react": "1.5",
         "friendsofphp/php-cs-fixer": "^3.8",
+        "infection/infection": "^0.26.6",
         "jetbrains/phpstorm-attributes": "^1.0",
         "phpmd/phpmd": "^2.12",
         "phpstan/phpstan": "^1.5",
