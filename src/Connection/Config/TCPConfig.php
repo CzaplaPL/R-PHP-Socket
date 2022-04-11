@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Connection\Config;
 
-use App\Core\ConnectionType;
+use App\Core\Enums\ConnectionType;
 use App\Core\Url;
 use JetBrains\PhpStorm\Pure;
 
