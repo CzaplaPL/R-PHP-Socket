@@ -6,5 +6,6 @@ namespace App\Core\Enums;
 
 enum ConnectionType: string
 {
-    case TCP = '';
+    case TCP = 'tcp';
+    case TLS = 'tls';
 }
