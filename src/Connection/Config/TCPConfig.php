@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Connection\Config;
 
-use App\Core\Enums\ConnectionType;
 use App\Core\Url;
 use JetBrains\PhpStorm\Pure;
 
@@ -15,7 +14,7 @@ final class TCPConfig implements ConnectionConfig
     #[Pure]
     public function __construct()
     {
-        $this->url = new Url('', ConnectionType::TCP, '');
+        $this->url = new Url('url');
     }
 
     #[Pure]
