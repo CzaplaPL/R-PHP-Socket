@@ -1,5 +1,5 @@
 {
-    "name": "czapla/r_php_socket",
+    "name": "czapla/r_socket",
     "description": "library for rsocket",
     "type": "library",
     "license": "MIT License",
