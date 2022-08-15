@@ -2,7 +2,7 @@
 
 namespace App\Tests\Core;
 
-use App\Connection\Config\TCPConfig;
+use App\Client\Config\TCPConfig;
 use App\Core\Enums\ConnectionType;
 use App\Core\Exception\WrongUrlException;
 use App\Core\Url;

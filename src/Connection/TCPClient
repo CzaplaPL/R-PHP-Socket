@@ -1,6 +1,0 @@
-final class TCPClient implements IRSocketClient
-{
-   public function __construct(private readonly Url $url){
-      $this->url = URL::fromAddress($address);
-   }
-}

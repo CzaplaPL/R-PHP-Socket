@@ -2,10 +2,10 @@
 
 declare(strict_types=1);
 
-namespace App\Connection\Builder;
+namespace App\Client\Builder;
 
-use App\Connection\Connection;
-use App\Connection\IConnection;
+use App\Client\Connection;
+use App\Client\IRSocketClient;
 use App\Core\Enums\ConnectionType;
 use App\Core\Exception\WrongUrlException;
 use App\Core\Url;
@@ -94,7 +94,7 @@ final class ConnectionBuilder implements IConnectionBuilder
         // TODO: Implement setHttpHeader() method.
     }
 
-    public function connect(): IConnection
+    public function connect(): IRSocketClient
     {
         return new Connection();
         // TODO: Implement connect() method.
