@@ -2,9 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Connection\Builder;
+namespace App\Client\Builder;
 
-use App\Connection\IConnection;
+use App\Client\IRSocketClient;
 use App\Core\Enums\ConnectionType;
 use React\Dns\Resolver\ResolverInterface;
 use React\EventLoop\LoopInterface;
@@ -33,5 +33,5 @@ interface IConnectionBuilder
 
     public function setHttpHeader(array $httpHeader): self;
 
-    public function connect(): IConnection;
+    public function connect(): IRSocketClient;
 }

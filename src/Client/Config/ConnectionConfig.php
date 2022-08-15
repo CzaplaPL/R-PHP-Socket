@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Connection\Config;
+namespace App\Client\Config;
 
 interface ConnectionConfig
 {
