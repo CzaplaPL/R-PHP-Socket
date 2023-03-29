@@ -22,52 +22,72 @@ use React\Socket\TcpServer;
 //
 //final class ConnectionBuilderTest extends ConnectionTestCase
 //{
+//    private ?ConnectionInterface $globalConnection;
+//
+//    private $peer;
 //    public function testCreateSimpleTcpClient(): void
 //    {
-//        $server = new TcpServer(0);
-//
-//        $ConnectionBuilder = new ConnectionBuilder();
-//
-//
-//        $server->on('connection', $this->expectedCallback());
-//
-//        $peer = new Promise(function ($resolve, $reject) use ($server) {
-//            $server->on('connection', $resolve);
-//        });
-//
-//        $connection = $connectionBuilder->createConnection();
-//
-//        Block\await($peer, null, self::TIMEOUT);
-//
-//        $server->close();
-//        $connection->close();
+////        $server = new TcpServer(0);
+////
+////       // $ConnectionBuilder = new ConnectionBuilder();
+////
+////
+////        $server->on('connection', $this->expectedCallback());
+////
+////        $peer = new Promise(function ($resolve, $reject) use ($server) {
+////            $server->on('connection', $resolve);
+////        });
+////
+////        //$connection = $connectionBuilder->createConnection();
+////
+////        Block\await($peer, null, self::TIMEOUT);
+////
+////        $server->close();
+////        $connection->close();
 //        $server = new TcpServer(0);
 //
 //        $connector = new Connector();
 //
 //
-//        $server->on('connection', $this->expectedCallback());
+//        $server->on('connection', function (ConnectionInterface $conn) use ($server) {
+//            $this->peer = new Promise(function ($resolve, $reject) use ($conn) {
+//                $conn->on('data', function ($data) {
+//                    var_dump($data);
+//                });
 //
-//        $peer = new Promise(function ($resolve, $reject) use ($server) {
-//            $server->on('connection', $resolve);
+//            });
 //        });
 //
 //        $promise = $connector->connect($server->getAddress());
 //
-//        Block\await($peer, null, self::TIMEOUT);
+//        $promise->then(function (ConnectionInterface $connection) {
+//             $this->globalConnection = $connection;
+//            var_dump("eee222");
+//
+//            $connection->write("test");
+//        });
+//        Block\await($promise, null, self::TIMEOUT);
+//        $this->globalConnection->write("test2222");
+//        Block\await($this->peer, null, self::TIMEOUT);
 //
 //        $server->close();
 //
-//        $promise->then(function (ConnectionInterface $connection) {
-//            $connection->close();
-//        });
+//
+//
+//    }
+//
+//    public function testCreateSimpleTcpClient2(): void
+//    {
+//        $server = new TcpServer(0);
+//
+//        $connector = new Connector();
 //
 //        $data = str_repeat('c', 100000);
-//        $this->server->on('connection', function (ConnectionInterface $peer) use ($data) {
+//        $server->on('connection', function (ConnectionInterface $peer) use ($data) {
 //            $peer->write($data);
 //        });
 //
-//        $connecting = $this->connector->connect($this->server->getAddress());
+//        $connecting = $connector->connect($server->getAddress());
 //
 //        $promise = new Promise(function ($resolve, $reject) use ($connecting) {
 //            $connecting->then(function (ConnectionInterface $connection) use ($resolve) {
@@ -89,6 +109,6 @@ use React\Socket\TcpServer;
 //        $connecting->then(function (ConnectionInterface $connection) {
 //            $connection->close();
 //        });
-
+//
 //    }
 //}

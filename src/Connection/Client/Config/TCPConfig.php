@@ -2,12 +2,12 @@
 
 declare(strict_types=1);
 
-namespace App\Client\Config;
+namespace App\Connection\Client\Config;
 
 use App\Core\Url;
 use JetBrains\PhpStorm\Pure;
 
-final class TCPConfig implements ConnectionConfig
+final class TCPConfig
 {
     private Url $url;
 

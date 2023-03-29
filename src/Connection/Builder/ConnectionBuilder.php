@@ -2,15 +2,18 @@
 
 declare(strict_types=1);
 
-namespace App\Client\Builder;
+namespace App\Connection\Builder;
 
-use App\Client\Connection;
-use App\Client\IRSocketClient;
+use App\Connection\Client\IRSocketClient;
+use App\Connection\Client\TCPClient;
 use App\Core\Enums\ConnectionType;
 use App\Core\Exception\WrongUrlException;
 use App\Core\Url;
+use App\Server\IRSocketServer;
+use App\Test\TestServer;
 use React\Dns\Resolver\ResolverInterface;
 use React\EventLoop\LoopInterface;
+use React\Socket\Connector;
 
 final class ConnectionBuilder implements IConnectionBuilder
 {
@@ -19,7 +22,7 @@ final class ConnectionBuilder implements IConnectionBuilder
     /**
      * @throws WrongUrlException
      */
-    public function __construct(string $address = '')
+    public function __construct(string $address = '127.0.0.1:80')
     {
         $this->url = Url::fromAddress($address);
     }
@@ -88,15 +91,15 @@ final class ConnectionBuilder implements IConnectionBuilder
         // TODO: Implement setSocketOptions() method.
     }
 
-    public function setHttpHeader(array $httpHeader): IConnectionBuilder
+    public function createClient(): IRSocketClient
     {
-        return $this;
-        // TODO: Implement setHttpHeader() method.
+        $connector = new Connector();
+
+        return new TCPClient($connector, $this->url);
     }
 
-    public function connect(): IRSocketClient
+    public function createServer(): IRSocketServer
     {
-        return new Connection();
-        // TODO: Implement connect() method.
+        return new TestServer();
     }
 }
