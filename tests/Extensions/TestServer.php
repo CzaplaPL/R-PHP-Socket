@@ -66,7 +66,7 @@ final class TestServer implements IRSocketServer
 
     private function createSocket(): void
     {
-        $this->socket = new SocketServer('127.0.0.1:80');
+        $this->socket = new SocketServer('127.0.0.1:9090');
 
         $this->socket->on('connection', function (ConnectionInterface $connection): void {
             if($connection->getRemoteAddress()) {
