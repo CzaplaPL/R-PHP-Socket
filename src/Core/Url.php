@@ -34,8 +34,6 @@ final class Url
      * tls://google.com:443
      * ip.com:80.
      *
-     * @return Url
-     *
      * @throws WrongUrlException
      */
     public static function fromAddress(string $address): self
@@ -96,8 +94,6 @@ final class Url
     /**
      * @param string $url url address
      *
-     * @return Url
-     *
      * @throws WrongUrlException
      */
     public function setUrl(string $url): self
@@ -107,8 +103,6 @@ final class Url
 
     /**
      * @param string $port connection port
-     *
-     * @return Url
      *
      * @throws WrongUrlException
      */
@@ -123,8 +117,6 @@ final class Url
      * 127.90.69.21:80
      * tls://google.com:443
      * ip.com:80.
-     *
-     * @return Url
      *
      * @throws WrongUrlException
      */
