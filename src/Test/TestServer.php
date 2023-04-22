@@ -66,13 +66,13 @@ final class TestServer implements IRSocketServer
 
         $this->socket->on('connection', function (ConnectionInterface $connection): void {
             $this->connectedAddresses[] = $connection->getRemoteAddress();
-//            $connection->write("Hello " . $connection->getRemoteAddress() . "!\n");
-//            $connection->write("Welcome to this amazing server!\n");
-//            $connection->write("Here's a tip: don't say anything.\n");
-//
-//            $connection->on('data', function ($data) use ($connection) {
-//                $connection->close();
-//            });
+            //            $connection->write("Hello " . $connection->getRemoteAddress() . "!\n");
+            //            $connection->write("Welcome to this amazing server!\n");
+            //            $connection->write("Here's a tip: don't say anything.\n");
+            //
+            //            $connection->on('data', function ($data) use ($connection) {
+            //                $connection->close();
+            //            });
         });
     }
 }
