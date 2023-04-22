@@ -7,6 +7,7 @@ namespace App\Core;
 use App\Core\Enums\ConnectionType;
 use App\Core\Exception\WrongUrlException;
 use JetBrains\PhpStorm\Pure;
+use ValueError;
 
 final class Url
 {
@@ -34,8 +35,6 @@ final class Url
      * tls://google.com:443
      * ip.com:80.
      *
-     * @return Url
-     *
      * @throws WrongUrlException
      */
     public static function fromAddress(string $address): self
@@ -46,7 +45,7 @@ final class Url
             $type = substr($address, 0, $urlPosition);
             try {
                 $connectionType = ConnectionType::From($type);
-            } catch (\ValueError $e) {
+            } catch (ValueError $e) {
                 throw WrongUrlException::typeIsNotSupported($type);
             }
             $address = substr($address, $urlPosition + 3);
@@ -96,8 +95,6 @@ final class Url
     /**
      * @param string $url url address
      *
-     * @return Url
-     *
      * @throws WrongUrlException
      */
     public function setUrl(string $url): self
@@ -107,8 +104,6 @@ final class Url
 
     /**
      * @param string $port connection port
-     *
-     * @return Url
      *
      * @throws WrongUrlException
      */
@@ -123,8 +118,6 @@ final class Url
      * 127.90.69.21:80
      * tls://google.com:443
      * ip.com:80.
-     *
-     * @return Url
      *
      * @throws WrongUrlException
      */
