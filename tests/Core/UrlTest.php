@@ -2,13 +2,12 @@
 
 namespace App\Tests\Core;
 
-use App\Client\Config\TCPConfig;
 use App\Core\Enums\ConnectionType;
 use App\Core\Exception\WrongUrlException;
 use App\Core\Url;
 use PHPUnit\Framework\TestCase;
 
-class UrlTest extends TestCase
+final class UrlTest extends TestCase
 {
     /**
      * @dataProvider correctAddressProvider
