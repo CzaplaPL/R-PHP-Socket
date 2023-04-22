@@ -2,8 +2,9 @@
 
 declare(strict_types=1);
 
-namespace App\Test;
+namespace App\Tests;
 
+use App\Tests\Extensions\TestServer;
 use PHPUnit\Framework\TestCase;
 
 class RSocketTestCase extends TestCase

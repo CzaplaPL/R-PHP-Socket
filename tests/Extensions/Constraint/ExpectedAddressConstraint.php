@@ -2,7 +2,7 @@
 
 declare(strict_types=1);
 
-namespace App\Test\Constraint;
+namespace App\Tests\Extensions\Constraint;
 
 use PHPUnit\Framework\Constraint\Constraint;
 use PHPUnit\Framework\ExpectationFailedException;
@@ -18,6 +18,7 @@ final class ExpectedAddressConstraint extends Constraint
 
     /**
      * @throws ExpectationFailedException
+     * @param mixed $other
      */
     public function evaluate($other, string $description = '', bool $returnResult = false): ?bool
     {

@@ -28,8 +28,10 @@ interface IConnectionBuilder
 
     public function setDnsResolver(?ResolverInterface $dnsResolver): self;
 
+    /** @phpstan-ignore-next-line */
     public function setTlsOptions(array $tlsOption): self;
 
+    /** @phpstan-ignore-next-line */
     public function setSocketOptions(array $tlsOption): self;
 
     public function createClient(): IRSocketClient;

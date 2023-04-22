@@ -4,16 +4,14 @@ namespace App\Tests\Client;
 
 use App\Connection\Builder\ConnectionBuilder;
 use App\Connection\IRSocketConnection;
-use App\Test\RSocketTestCase;
-use Exception;
-use React\Socket\ConnectionInterface;
+use App\Tests\RSocketTestCase;
 use RuntimeException;
 use function Clue\React\Block\await;
 
 final class ClientConnectToServerTest extends RSocketTestCase
 {
 
-    public function testDefaultConnection() {
+    public function testDefaultConnection(): void {
         $connectionBuilder = new ConnectionBuilder();
         $client = $connectionBuilder->createClient();
 
@@ -22,10 +20,10 @@ final class ClientConnectToServerTest extends RSocketTestCase
          */
         $connection = await($client->connect());
 
-        $this->RSocketServer->expectConnectionFromAddress($connection->getLocalAddress());
+        $this->RSocketServer->expectConnectionFromAddress($connection->getLocalAddress()??'');
     }
 
-    public function testConnectionRejectWhenServerNotAvailable() {
+    public function testConnectionRejectWhenServerNotAvailable(): void {
         $this->RSocketServer->close();
         $connectionBuilder = new ConnectionBuilder();
         $client = $connectionBuilder->createClient();
@@ -36,7 +34,5 @@ final class ClientConnectToServerTest extends RSocketTestCase
          * @var IRSocketConnection $connection
          */
         $connection = await($client->connect());
-
-        $connection->getLocalAddress();
     }
 }

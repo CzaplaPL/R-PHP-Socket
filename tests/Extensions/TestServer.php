@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Test;
+namespace App\Tests\Extensions;
 
 use App\Server\IRSocketServer;
-use App\Test\Constraint\ExpectedAddressConstraint;
+use App\Tests\Extensions\Constraint\ExpectedAddressConstraint;
+use PHPUnit\Framework\Constraint\Constraint;
 use React\Socket\ConnectionInterface;
 use React\Socket\SocketServer;
 
@@ -30,6 +31,9 @@ final class TestServer implements IRSocketServer
         $this->expectedConnectionsAddress[] = $address;
     }
 
+    /**
+     * @return array<mixed,Constraint>
+     */
     public function getConstraints(): array
     {
         $constraints = [];
@@ -65,14 +69,9 @@ final class TestServer implements IRSocketServer
         $this->socket = new SocketServer('127.0.0.1:80');
 
         $this->socket->on('connection', function (ConnectionInterface $connection): void {
-            $this->connectedAddresses[] = $connection->getRemoteAddress();
-            //            $connection->write("Hello " . $connection->getRemoteAddress() . "!\n");
-            //            $connection->write("Welcome to this amazing server!\n");
-            //            $connection->write("Here's a tip: don't say anything.\n");
-            //
-            //            $connection->on('data', function ($data) use ($connection) {
-            //                $connection->close();
-            //            });
+            if($connection->getRemoteAddress()) {
+                $this->connectedAddresses[] = $connection->getRemoteAddress();
+            }
         });
     }
 }

@@ -2,10 +2,7 @@
 
 namespace App\Tests;
 
-use App\Test\RSocketTestCase;
 use App\Tests\Stub\CallbackStub;
-use PHPUnit\Framework\MockObject\MockObject;
-use PHPUnit\Framework\TestCase;
 
 class ConnectionTestCase extends RSocketTestCase
 {

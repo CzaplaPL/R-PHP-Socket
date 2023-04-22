@@ -10,7 +10,7 @@ use App\Core\Enums\ConnectionType;
 use App\Core\Exception\WrongUrlException;
 use App\Core\Url;
 use App\Server\IRSocketServer;
-use App\Test\TestServer;
+use App\Tests\Extensions\TestServer;
 use React\Dns\Resolver\ResolverInterface;
 use React\EventLoop\LoopInterface;
 use React\Socket\Connector;
@@ -79,12 +79,14 @@ final class ConnectionBuilder implements IConnectionBuilder
         // TODO: Implement setDnsResolver() method.
     }
 
+    /** @phpstan-ignore-next-line */
     public function setTlsOptions(array $tlsOption): IConnectionBuilder
     {
         return $this;
         // TODO: Implement setTlsOptions() method.
     }
 
+    /** @phpstan-ignore-next-line */
     public function setSocketOptions(array $tlsOption): IConnectionBuilder
     {
         return $this;
