@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Connection\ConnectionConfig;
 
-use App\Client\Config\TCPConfig;
+use App\Connection\Client\Config\TCPConfig;
 use App\Tests\ConnectionTestCase;
 
 final class TCPConfigTest extends ConnectionTestCase

@@ -2,10 +2,11 @@
 
 declare(strict_types=1);
 
-namespace App\Client\Builder;
+namespace App\Connection\Builder;
 
-use App\Client\IRSocketClient;
+use App\Connection\Client\IRSocketClient;
 use App\Core\Enums\ConnectionType;
+use App\Server\IRSocketServer;
 use React\Dns\Resolver\ResolverInterface;
 use React\EventLoop\LoopInterface;
 
@@ -27,11 +28,13 @@ interface IConnectionBuilder
 
     public function setDnsResolver(?ResolverInterface $dnsResolver): self;
 
+    /** @phpstan-ignore-next-line */
     public function setTlsOptions(array $tlsOption): self;
 
+    /** @phpstan-ignore-next-line */
     public function setSocketOptions(array $tlsOption): self;
 
-    public function setHttpHeader(array $httpHeader): self;
+    public function createClient(): IRSocketClient;
 
-    public function connect(): IRSocketClient;
+    public function createServer(): IRSocketServer;
 }
