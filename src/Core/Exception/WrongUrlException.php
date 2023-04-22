@@ -4,9 +4,10 @@ declare(strict_types=1);
 
 namespace App\Core\Exception;
 
+use Exception;
 use JetBrains\PhpStorm\Pure;
 
-class WrongUrlException extends \Exception
+class WrongUrlException extends Exception
 {
     #[Pure]
     public static function wrongAddress(): self
