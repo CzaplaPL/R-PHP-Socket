@@ -16,4 +16,8 @@ final class RSocketConnection implements IRSocketConnection
     {
         return $this->connection->getLocalAddress();
     }
+
+    public function conection(): ConnectionInterface {
+        return $this->connection;
+    }
 }
