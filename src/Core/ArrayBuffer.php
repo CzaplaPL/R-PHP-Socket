@@ -30,6 +30,16 @@ class ArrayBuffer
         $this->buffer[] = $number >> 8 & 0xFF;
         $this->buffer[] = $number  & 0xFF;
     }
+
+    public function getUInt24(int $offset): int {
+        $number =  $this->buffer[$offset];
+        $number = $number << 8;
+        $number += $this->buffer[$offset + 1];
+        $number = $number << 8;
+        $number += $this->buffer[$offset + 2];
+        return $number;
+    }
+
     public function addUInt32(int $number) {
         $this->buffer[] = $number >> 24 & 0xFF;
         $this->buffer[] = $number >> 16 & 0xFF;
@@ -37,10 +47,29 @@ class ArrayBuffer
         $this->buffer[] = $number  & 0xFF;
     }
 
+    public function getUInt32(int $offset): int {
+        $number =  $this->buffer[$offset];
+        $number = $number << 8;
+        $number += $this->buffer[$offset + 1];
+        $number = $number << 8;
+        $number += $this->buffer[$offset + 2];
+        $number = $number << 8;
+        $number += $this->buffer[$offset + 3];
+        return $number;
+    }
+
     public function addUInt16(int $number):void
     {
         $this->buffer[] = $number >> 8 & 0xFF;
         $this->buffer[] = $number  & 0xFF;
+    }
+
+    public function getUInt16(int $offset)
+    {
+        $number =  $this->buffer[$offset ];
+        $number = $number << 8;
+        $number += $this->buffer[$offset +1];
+        return $number;
     }
 
     public function ToString(): string
@@ -53,5 +82,7 @@ class ArrayBuffer
 
         return $stringValue;
     }
+
+
 
 }

@@ -12,7 +12,8 @@ use function Clue\React\Block\await;
 final class ClientConnectToServerTest extends RSocketTestCase
 {
 
-    public function testDefaultConnection(): void {
+    public function testDefaultConnection(): void
+    {
         $connectionBuilder = new ConnectionBuilder();
         $client = $connectionBuilder->createClient();
 
@@ -22,10 +23,11 @@ final class ClientConnectToServerTest extends RSocketTestCase
          */
         $connection = await($client->connect());
 
-        $this->RSocketServer->expectConnectionFromAddress($connection->getLocalAddress()??'');
+        $this->RSocketServer->expectConnectionFromAddress($connection->getLocalAddress() ?? '');
     }
 
-    public function testConnectionRejectWhenServerNotAvailable(): void {
+    public function testConnectionRejectWhenServerNotAvailable(): void
+    {
         $this->RSocketServer->close();
         $connectionBuilder = new ConnectionBuilder();
         $client = $connectionBuilder->createClient();
@@ -39,7 +41,8 @@ final class ClientConnectToServerTest extends RSocketTestCase
     }
 
 
-    public function testConnectionWithDefaultSetupFrame(): void {
+    public function testConnectionWithDefaultSetupFrame(): void
+    {
         $this->RSocketServer->close();
         $connectionBuilder = new ConnectionBuilder();
         $client = $connectionBuilder->createClient();
@@ -53,13 +56,26 @@ final class ClientConnectToServerTest extends RSocketTestCase
 
         var_dump($connection->getLocalAddress());
         $loop = Loop::get();
+        $connection->conection()->on("data", function ($data) {
+            var_dump($data);
+        });
+        $obs = $connection->requestResponse('witam z php');
+        $obs->subscribe(function ($data) {
+            var_dump($data);
+        },
+            function ($erro) {
+                var_dump($erro);
+            },
+            function () {
+                var_dump("complete");
+            }
+        );
 
-
-        $loop->addTimer(200.0, function () use ($loop) {
+        $loop->addTimer(20.0, function () use ($loop) {
             $loop->stop();
         });
         $loop->run();
-        $this->assertEquals(true,true);
+        $this->assertEquals(true, true);
 
     }
 }

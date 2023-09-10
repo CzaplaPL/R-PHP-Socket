@@ -4,11 +4,11 @@ namespace App\Frame;
 
 use App\Core\ArrayBuffer;
 
-class SetupFrame implements IFame
+class SetupFrame implements IFrame
 {
 
 
-    private int $streamId = 1;
+    private int $streamId = 0;
     private int $hasMetadata = 0;
     private int $hasResumeEnable = 0;
     private int  $hasLease = 0;
@@ -46,5 +46,25 @@ class SetupFrame implements IFame
         $value = $value << 6;
 
         return $value;
+    }
+
+    public function streamId(): int
+    {
+        return $this->streamId;
+    }
+
+    public function complete(): bool
+    {
+        return true;
+    }
+
+    public function next(): bool
+    {
+        return true;
+    }
+
+    public function payload(): string
+    {
+        return  '';
     }
 }
