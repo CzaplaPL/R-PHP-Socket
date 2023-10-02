@@ -59,4 +59,10 @@ final class RSocketConnection implements IRSocketConnection
         $this->streamId += 2;
         return $subject->asObservable();
     }
+
+    public function fireAndForget(string $data): void
+    {
+        $frame = new RequestResponseFrame($this->streamId, $data);
+        $this->connection->write($frame->serialize());
+    }
 }
