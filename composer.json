@@ -38,11 +38,11 @@
         "jetbrains/phpstorm-attributes": "^1.0",
         "phpmd/phpmd": "^2.12",
         "phpstan/phpstan": "^1.5",
-        "phpunit/phpunit": "9.6.7",
+        "phpunit/phpunit": "9.6.10",
         "vimeo/psalm": "^4.22 || ^5.0"
     },
     "require": {
-        "react/socket": "1.12.0",
+        "react/socket": "1.13.0",
         "reactivex/rxphp": "^2.0"
     }
 }
