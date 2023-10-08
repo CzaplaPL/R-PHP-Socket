@@ -6,6 +6,7 @@ namespace App\Connection\Builder;
 
 use App\Connection\Client\IRSocketClient;
 use App\Connection\Client\TCPClient;
+use App\Connection\Server\TCPServer;
 use App\Core\Enums\ConnectionType;
 use App\Core\Exception\WrongUrlException;
 use App\Core\Url;
@@ -102,8 +103,9 @@ final class ConnectionBuilder implements IConnectionBuilder
         return new TCPClient($connector, $this->url, $frameFactory);
     }
 
-    public function createServer(): IRSocketServer
+    public function createServer(): TCPServer
     {
-        return new TestServer();
+        $frameFactory = new FrameFactory();
+        return new TCPServer( $this->url,$frameFactory);
     }
 }

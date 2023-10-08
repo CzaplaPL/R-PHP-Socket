@@ -78,4 +78,21 @@ final class ClientConnectToServerTest extends RSocketTestCase
         $this->assertEquals(true, true);
 
     }
+
+    public function testServer(): void
+    {
+        $this->RSocketServer->close();
+        $connectionBuilder = new ConnectionBuilder();
+        $server = $connectionBuilder->createServer();
+
+
+        $loop = Loop::get();
+
+        $loop->addTimer(30.0, function () use ($loop) {
+            $loop->stop();
+        });
+        $loop->run();
+        $this->assertEquals(true, true);
+
+    }
 }
