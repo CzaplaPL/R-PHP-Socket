@@ -7,6 +7,7 @@ namespace App\Tests\Extensions;
 use App\Server\IRSocketServer;
 use App\Tests\Extensions\Constraint\ExpectedAddressConstraint;
 use PHPUnit\Framework\Constraint\Constraint;
+use React\EventLoop\Loop;
 use React\Socket\ConnectionInterface;
 use React\Socket\SocketServer;
 
@@ -66,7 +67,7 @@ final class TestServer implements IRSocketServer
 
     private function createSocket(): void
     {
-        $this->socket = new SocketServer('127.0.0.1:9090');
+        $this->socket = new SocketServer('127.0.0.1:9091');
 
         $this->socket->on('connection', function (ConnectionInterface $connection): void {
             if($connection->getRemoteAddress()) {

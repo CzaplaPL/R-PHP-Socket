@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Connection\Builder;
 
 use App\Connection\Client\IRSocketClient;
+use App\Connection\Server\TCPServer;
 use App\Core\Enums\ConnectionType;
 use App\Server\IRSocketServer;
 use React\Dns\Resolver\ResolverInterface;
@@ -36,5 +37,5 @@ interface IConnectionBuilder
 
     public function createClient(): IRSocketClient;
 
-    public function createServer(): IRSocketServer;
+    public function createServer(): TCPServer;
 }

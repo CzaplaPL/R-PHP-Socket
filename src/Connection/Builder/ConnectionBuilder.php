@@ -6,9 +6,11 @@ namespace App\Connection\Builder;
 
 use App\Connection\Client\IRSocketClient;
 use App\Connection\Client\TCPClient;
+use App\Connection\Server\TCPServer;
 use App\Core\Enums\ConnectionType;
 use App\Core\Exception\WrongUrlException;
 use App\Core\Url;
+use App\Frame\Factory\FrameFactory;
 use App\Server\IRSocketServer;
 use App\Tests\Extensions\TestServer;
 use React\Dns\Resolver\ResolverInterface;
@@ -96,12 +98,14 @@ final class ConnectionBuilder implements IConnectionBuilder
     public function createClient(): IRSocketClient
     {
         $connector = new Connector();
+        $frameFactory = new FrameFactory();
 
-        return new TCPClient($connector, $this->url);
+        return new TCPClient($connector, $this->url, $frameFactory);
     }
 
-    public function createServer(): IRSocketServer
+    public function createServer(): TCPServer
     {
-        return new TestServer();
+        $frameFactory = new FrameFactory();
+        return new TCPServer( $this->url,$frameFactory);
     }
 }
