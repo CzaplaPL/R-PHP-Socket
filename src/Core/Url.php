@@ -92,6 +92,11 @@ final class Url
         return new self($this->url, $type, $this->port);
     }
 
+    public function getConnectionType(): ConnectionType
+    {
+        return $this->connectionType;
+    }
+
     /**
      * @param string $url url address
      *

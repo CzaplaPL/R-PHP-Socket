@@ -1,21 +1,17 @@
 <?php
 
-namespace App\Frame;
+declare(strict_types=1);
 
-use App\Core\ArrayBuffer;
+namespace App\Frame;
 
 class PayloadFrame implements IFrame
 {
-
-
     private int $streamId;
     private string $payload;
     private int $hasMetadata;
     private bool $follows;
     private bool $complete;
     private bool $next;
-
-
 
     public function __construct(
         int $streamId,
@@ -24,8 +20,7 @@ class PayloadFrame implements IFrame
         bool $follows,
         bool $complete,
         bool $next,
-    )
-    {
+    ) {
         $this->streamId = $streamId;
         $this->payload = $payload;
         $this->hasMetadata = $hasMetadata;
@@ -34,8 +29,8 @@ class PayloadFrame implements IFrame
         $this->next = $next;
     }
 
-    public function fromString(string $data) {
-
+    public function fromString(string $data): void
+    {
     }
 
     public function serialize(): string
@@ -45,7 +40,7 @@ class PayloadFrame implements IFrame
 
     public function streamId(): int
     {
-        return  $this->streamId;
+        return $this->streamId;
     }
 
     public function complete(): bool

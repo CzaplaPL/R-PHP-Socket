@@ -8,4 +8,5 @@ enum ConnectionType: string
 {
     case TCP = 'tcp';
     case TLS = 'tls';
+    case WS = 'ws';
 }

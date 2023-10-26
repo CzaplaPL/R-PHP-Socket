@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Tests\Extensions;
 
-use App\Server\IRSocketServer;
+use App\Connection\Server\IRSocketServer;
 use App\Tests\Extensions\Constraint\ExpectedAddressConstraint;
 use PHPUnit\Framework\Constraint\Constraint;
 use React\EventLoop\Loop;
