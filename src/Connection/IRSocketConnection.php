@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace App\Connection;
 
-use React\Promise\Promise;
 use React\Socket\ConnectionInterface;
 use Rx\Observable;
 

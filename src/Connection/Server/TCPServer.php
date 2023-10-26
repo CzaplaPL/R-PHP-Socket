@@ -7,16 +7,11 @@ namespace App\Connection\Server;
 use App\Connection\RSocketConnection;
 use App\Core\Url;
 use App\Frame\Factory\IFrameFactory;
-use App\Frame\SetupFrame;
-use Exception;
-use React\EventLoop\Loop;
-use React\Promise\Promise;
 use React\Socket\ConnectionInterface;
-use React\Socket\Connector;
 use React\Socket\ServerInterface;
 use React\Socket\SocketServer;
 
-final class TCPServer
+final class TCPServer implements IRSocketServer
 {
     private ServerInterface $server;
     /**
@@ -24,11 +19,11 @@ final class TCPServer
      */
     private array $connections;
 
-    public function __construct(private readonly Url $url, private readonly  IFrameFactory $frameFactory)
+    public function __construct(private readonly Url $url, private readonly IFrameFactory $frameFactory)
     {
         $this->server = new SocketServer($this->url->getAddress());
-        $this->server->on('connection', function (ConnectionInterface $connection) {
-          $this->connections[] = new RSocketConnection($connection, $this->frameFactory);
+        $this->server->on('connection', function (ConnectionInterface $connection): void {
+            $this->connections[] = new RSocketConnection($connection, $this->frameFactory);
         });
     }
 }

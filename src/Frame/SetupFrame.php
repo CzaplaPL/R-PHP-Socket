@@ -1,25 +1,24 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Frame;
 
 use App\Core\ArrayBuffer;
 
 class SetupFrame implements IFrame
 {
-
-
     private int $streamId = 0;
     private int $hasMetadata = 0;
     private int $hasResumeEnable = 0;
-    private int  $hasLease = 0;
-    private int  $majorVersion = 1;
-    private int  $minorVersion = 0;
-    private int  $keepAlive = 500;
-    private int  $maxLife = 2500;
+    private int $hasLease = 0;
+    private int $majorVersion = 1;
+    private int $minorVersion = 0;
+    private int $keepAlive = 500;
+    private int $maxLife = 2500;
 
     public function serialize(): string
     {
-
         $buffer = new ArrayBuffer();
         $buffer->addUInt32($this->streamId);
         $buffer->addUInt16($this->generateTypeAndFlags());
@@ -31,18 +30,19 @@ class SetupFrame implements IFrame
 
         $sizeBuffer = new ArrayBuffer();
         $sizeBuffer->addUInt24(count($buffer->getBuffer()));
-        return $sizeBuffer->ToString() . $buffer->ToString();
+
+        return $sizeBuffer->ToString().$buffer->ToString();
     }
 
     private function generateTypeAndFlags(): int
     {
         $value = 1;
         $value = $value << 2;
-        $value += $this->hasMetadata ? 1 : 0 ;
+        $value += $this->hasMetadata ? 1 : 0;
         $value = $value << 1;
-        $value += $this->hasResumeEnable ? 1 : 0 ;
+        $value += $this->hasResumeEnable ? 1 : 0;
         $value = $value << 1;
-        $value += $this->hasLease ? 1 : 0 ;
+        $value += $this->hasLease ? 1 : 0;
         $value = $value << 6;
 
         return $value;
@@ -65,6 +65,6 @@ class SetupFrame implements IFrame
 
     public function payload(): string
     {
-        return  '';
+        return '';
     }
 }
