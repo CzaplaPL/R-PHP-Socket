@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Tests;
 
+use App\Connection\Builder\ConnectionBuilder;
+use App\Connection\IRSocketConnection;
 use App\Email\Email;
 use Exception;
 use InvalidArgumentException;
@@ -18,6 +20,7 @@ use React\EventLoop\Loop;
 use React\Socket\TcpConnector;
 use React\Socket\SecureConnector;
 use React\Socket\TcpServer;
+use function Clue\React\Block\await;
 
 final class EmailTest extends TestCase
 {
@@ -156,5 +159,59 @@ final class EmailTest extends TestCase
 //
 //        Loop::run();
 //    }
+
+    public function testServer(): void
+    {
+//        $this->RSocketServer->close();
+        $connectionBuilder = new ConnectionBuilder();
+        $server = $connectionBuilder->createServer();
+
+
+        $loop = Loop::get();
+
+        $loop->addTimer(30.0, function () use ($loop) {
+            $loop->stop();
+        });
+        $loop->run();
+        $this->assertEquals(true, true);
+
+    }
+
+    public function testConnectionWithDefaultSetupFrame(): void
+    {
+        $connectionBuilder = new ConnectionBuilder();
+        $client = $connectionBuilder->createClient();
+
+//        $this->expectException(RuntimeException::class);
+
+        /**
+         * @var IRSocketConnection $connection
+         */
+        $connection = await($client->connect());
+
+        var_dump($connection->getLocalAddress());
+        $loop = Loop::get();
+        $connection->conection()->on("data", function ($data) {
+            var_dump($data);
+        });
+        $obs = $connection->requestResponse('witam z php');
+        $obs->subscribe(function ($data) {
+            var_dump($data);
+        },
+            function ($erro) {
+                var_dump($erro);
+            },
+            function () {
+                var_dump("complete");
+            }
+        );
+
+        $loop->addTimer(10.0, function () use ($loop) {
+            $loop->stop();
+        });
+        $loop->run();
+        $this->assertEquals(true, true);
+
+    }
 
 }
