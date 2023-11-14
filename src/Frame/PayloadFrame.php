@@ -4,11 +4,11 @@ declare(strict_types=1);
 
 namespace App\Frame;
 
-class PayloadFrame implements IFrame
+class PayloadFrame
 {
     private int $streamId;
     private string $payload;
-    private int $hasMetadata;
+    private bool $hasMetadata;
     private bool $follows;
     private bool $complete;
     private bool $next;

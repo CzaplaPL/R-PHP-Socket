@@ -23,6 +23,7 @@ use React\Socket\ConnectorInterface;
 
 /**
  * @phpstan-import-type contextArray from IConnectionBuilder
+ *
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  */
 final class ConnectionBuilder implements IConnectionBuilder
@@ -133,7 +134,7 @@ final class ConnectionBuilder implements IConnectionBuilder
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function setTlsOptions(array $tlsOption): IConnectionBuilder
     {
@@ -143,7 +144,7 @@ final class ConnectionBuilder implements IConnectionBuilder
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function setSocketOptions(array $socketOption): IConnectionBuilder
     {
@@ -160,7 +161,7 @@ final class ConnectionBuilder implements IConnectionBuilder
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function setSubProtocols(array $subProtocols): IConnectionBuilder
     {
@@ -170,7 +171,7 @@ final class ConnectionBuilder implements IConnectionBuilder
     }
 
     /**
-     * @inheritdoc
+     * {@inheritdoc}
      */
     public function setHeaders(array $headers): IConnectionBuilder
     {

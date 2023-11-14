@@ -6,7 +6,7 @@ namespace App\Frame;
 
 use App\Core\ArrayBuffer;
 
-class RequestResponseFrame implements IFrame
+class RequestResponseFrame
 {
     private int $streamId;
     private string $payload;
@@ -27,7 +27,7 @@ class RequestResponseFrame implements IFrame
         $sizeBuffer = new ArrayBuffer();
         $sizeBuffer->addUInt24(count($buffer->getBuffer()) + strlen($this->payload));
 
-        return $sizeBuffer->ToString().$buffer->ToString().$this->payload;
+        return $sizeBuffer->toString().$buffer->toString().$this->payload;
     }
 
     private function generateTypeAndFlags(): int

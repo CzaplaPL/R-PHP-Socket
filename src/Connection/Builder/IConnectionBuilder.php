@@ -44,13 +44,11 @@ interface IConnectionBuilder
 
     /**
      * @param array<mixed> $tlsOption
-     * @return IConnectionBuilder
      */
     public function setTlsOptions(array $tlsOption): self;
 
     /**
      * @param contextArray $socketOption
-     * @return IConnectionBuilder
      */
     public function setSocketOptions(array $socketOption): self;
 
@@ -58,13 +56,11 @@ interface IConnectionBuilder
 
     /**
      * @param array<mixed> $subProtocols
-     * @return IConnectionBuilder
      */
     public function setSubProtocols(array $subProtocols): self;
 
     /**
      * @param array<mixed> $headers
-     * @return IConnectionBuilder
      */
     public function setHeaders(array $headers): self;
 
