@@ -11,7 +11,6 @@ use App\Core\Exception\WrongConfigurationException;
 
 final class SetupFrame extends Frame
 {
-
     private const STREAM_ID = 0;
 
     /**
@@ -23,22 +22,20 @@ final class SetupFrame extends Frame
         private readonly bool $reasumeEnable = false,
         private readonly bool $leaseEnable = false,
         private readonly ?string $reasumeToken = null,
-        private readonly string $dataMimeType = "application/octet-stream",
-        private readonly string $metadataMimeType = "application/octet-stream",
+        private readonly string $dataMimeType = 'application/octet-stream',
+        private readonly string $metadataMimeType = 'application/octet-stream',
         private readonly ?string $metadata = null,
         private readonly ?string $data = null,
-    )
-    {
+    ) {
         parent::__construct(self::STREAM_ID);
 
-        if($this->keepAlive <= 0){
+        if ($this->keepAlive <= 0) {
             throw WrongConfigurationException::wrongKeepAlive();
         }
 
-        if($this->lifetime <= 0){
+        if ($this->lifetime <= 0) {
             throw WrongConfigurationException::wrongLifetime();
         }
-
     }
 
     public static function fromSettings(ConnectionSettings $settings): self
@@ -52,7 +49,6 @@ final class SetupFrame extends Frame
         );
     }
 
-
     public function serialize(): string
     {
         $buffer = new ArrayBuffer();
@@ -64,13 +60,12 @@ final class SetupFrame extends Frame
         $buffer->addUInt32($this->lifetime);
         $toReturn = $buffer->toString();
 
-        if($this->reasumeEnable) {
+        if ($this->reasumeEnable) {
             $reasumeTokenSize = new ArrayBuffer();
-            $reasumeTokenSize->addUInt16($this->reasumeEnable ? strlen($this->reasumeToken?? ''): 0);
+            $reasumeTokenSize->addUInt16($this->reasumeEnable ? strlen($this->reasumeToken ?? '') : 0);
             $toReturn .= $reasumeTokenSize->toString();
-            $toReturn .=  $this->reasumeToken ?? '';
+            $toReturn .= $this->reasumeToken ?? '';
         }
-
 
         $metaDataMimeTypeLenght = strlen($this->metadataMimeType);
         $toReturn .= chr($metaDataMimeTypeLenght);
@@ -80,15 +75,14 @@ final class SetupFrame extends Frame
         $toReturn .= chr($dataMimeTypeLenght);
         $toReturn .= $this->dataMimeType;
 
-        if($this->metadata) {
+        if ($this->metadata) {
             $metaDataSizeBuffer = new ArrayBuffer();
             $metaDataSizeBuffer->addUInt24(strlen($this->metadata));
 
-            $toReturn .= sprintf("%s%s", $metaDataSizeBuffer->toString(),$this->metadata);
+            $toReturn .= sprintf('%s%s', $metaDataSizeBuffer->toString(), $this->metadata);
         }
 
-
-        return sprintf("%s%s",$toReturn,$this->data ?? '');
+        return sprintf('%s%s', $toReturn, $this->data ?? '');
     }
 
     public function setData(DataDTO $dataDTO): self
@@ -134,6 +128,4 @@ final class SetupFrame extends Frame
 
         return $value;
     }
-
-
 }

@@ -11,7 +11,7 @@ interface IRSocketClient
 {
     public function connect(
         ConnectionSettings $settings = new ConnectionSettings(),
-        ?DataDTO           $data = null,
-        ?DataDTO           $metaData = null
+        DataDTO $data = null,
+        DataDTO $metaData = null
     ): Promise;
 }

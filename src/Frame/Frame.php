@@ -6,11 +6,10 @@ namespace App\Frame;
 
 abstract class Frame
 {
-
     protected readonly int $majorVersion;
     protected readonly int $minorVersion;
 
-    public function __construct( protected readonly int $streamId)
+    public function __construct(protected readonly int $streamId)
     {
         $this->majorVersion = 1;
         $this->minorVersion = 0;
@@ -18,7 +17,8 @@ abstract class Frame
 
     abstract public function serialize(): string;
 
-    public function streamId(): int {
+    public function streamId(): int
+    {
         return $this->streamId;
     }
 }

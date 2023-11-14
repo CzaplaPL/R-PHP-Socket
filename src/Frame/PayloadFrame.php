@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Frame;
 
-class PayloadFrame 
+class PayloadFrame
 {
     private int $streamId;
     private string $payload;

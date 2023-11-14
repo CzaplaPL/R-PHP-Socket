@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Connection\Client;
 
 class ConnectionSettings
@@ -10,53 +12,34 @@ class ConnectionSettings
         private readonly bool $reasumeEnable = false,
         private readonly bool $leaseEnable = false,
         private readonly ?string $reasumeToken = null,
-    )
-    {
+    ) {
     }
 
-    /**
-     * @return int
-     */
     public function getKeepAlive(): int
     {
         return $this->keepAlive;
     }
 
-    /**
-     * @return int
-     */
     public function getLifetime(): int
     {
         return $this->lifetime;
     }
 
-    /**
-     * @return bool
-     */
     public function isReasumeEnable(): bool
     {
         return $this->reasumeEnable;
     }
 
-    /**
-     * @return bool
-     */
     public function isLeaseEnable(): bool
     {
         return $this->leaseEnable;
     }
 
-    /**
-     * @return string|null
-     */
     public function getReasumeToken(): ?string
     {
         return $this->reasumeToken;
     }
 
-    /**
-     * @param int $keepAlive
-     */
     public function setKeepAlive(int $keepAlive): self
     {
         return new self(
@@ -68,9 +51,6 @@ class ConnectionSettings
         );
     }
 
-    /**
-     * @param int $lifetime
-     */
     public function setLifetime(int $lifetime): self
     {
         return new self(
@@ -82,9 +62,6 @@ class ConnectionSettings
         );
     }
 
-    /**
-     * @param bool $reasumeEnable
-     */
     public function setReasumeEnable(bool $reasumeEnable): self
     {
         return new self(
@@ -96,9 +73,6 @@ class ConnectionSettings
         );
     }
 
-    /**
-     * @param bool $leaseEnable
-     */
     public function setLeaseEnable(bool $leaseEnable): self
     {
         return new self(
@@ -110,9 +84,6 @@ class ConnectionSettings
         );
     }
 
-    /**
-     * @param string|null $reasumeToken
-     */
     public function setReasumeToken(?string $reasumeToken): self
     {
         return new self(

@@ -13,7 +13,6 @@ use App\Frame\SetupFrame;
 use Exception;
 use React\Promise\Promise;
 use React\Socket\ConnectionInterface;
-use React\Socket\Connector;
 use React\Socket\ConnectorInterface;
 
 final class TCPClient implements IRSocketClient
@@ -25,16 +24,15 @@ final class TCPClient implements IRSocketClient
         $this->frameFactory = $frameFactory;
     }
 
-    public function connect(ConnectionSettings $settings =  new ConnectionSettings(), ?DataDTO $data = null, ?DataDTO $metaData = null): Promise
+    public function connect(ConnectionSettings $settings = new ConnectionSettings(), DataDTO $data = null, DataDTO $metaData = null): Promise
     {
-
         $setupFrame = SetupFrame::fromSettings($settings);
-        if($data){
-            $setupFrame =  $setupFrame->setData($data);
+        if ($data) {
+            $setupFrame = $setupFrame->setData($data);
         }
 
-        if($metaData){
-            $setupFrame =  $setupFrame->setMetaData($metaData);
+        if ($metaData) {
+            $setupFrame = $setupFrame->setMetaData($metaData);
         }
 
         return new Promise(function (callable $resolver, callable $reject) use ($setupFrame): void {
@@ -43,7 +41,7 @@ final class TCPClient implements IRSocketClient
                     $value = $setupFrame->serialize();
                     $sizeBuffer = new ArrayBuffer();
                     $sizeBuffer->addUInt24(strlen($value));
-                    $connection->write($sizeBuffer->toString() . $value);
+                    $connection->write($sizeBuffer->toString().$value);
                     $resolver(new RSocketConnection($connection, $this->frameFactory));
                 }, function (Exception $e) use ($reject): void {
                     var_dump($e);
