@@ -72,7 +72,7 @@ class ArrayBuffer
         $this->buffer[] = $number & 0xFF;
     }
 
-    public function getUInt16(int $offset)
+    public function getUInt16(int $offset): int
     {
         $number = $this->buffer[$offset];
         $number = $number << 8;

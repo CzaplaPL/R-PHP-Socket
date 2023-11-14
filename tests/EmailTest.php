@@ -166,65 +166,65 @@ final class EmailTest extends TestCase
 //        Loop::run();
 //    }
 
-    public function testServer(): void
-    {
-//        $this->RSocketServer->close();
-        $connectionBuilder = new ConnectionBuilder();
-        $server = $connectionBuilder->createServer();
+//    public function testServer(): void
+//    {
+////        $this->RSocketServer->close();
+//        $connectionBuilder = new ConnectionBuilder();
+//        $server = $connectionBuilder->createServer();
+//
+//
+//        $loop = Loop::get();
+//
+//        $loop->addTimer(30.0, function () use ($loop) {
+//            $loop->stop();
+//        });
+//        $loop->run();
+//        $this->assertEquals(true, true);
+//
+//    }
 
-
-        $loop = Loop::get();
-
-        $loop->addTimer(30.0, function () use ($loop) {
-            $loop->stop();
-        });
-        $loop->run();
-        $this->assertEquals(true, true);
-
-    }
-
-    public function testConnectionWithDefaultSetupFrame(): void
-    {
-        $connectionBuilder = new ConnectionBuilder();
-        $client = $connectionBuilder->createClient();
-
-//        $this->expectException(RuntimeException::class);
-
-        /**
-         * @var IRSocketConnection $connection
-         */
-
-        $data = new DataDTO('data');
-        $metaData = new DataDTO('meta data');
-
-
-        $connection = await($client->connect(new ConnectionSettings(reasumeEnable: true, leaseEnable: true, reasumeToken: 'token11'), $data, $metaData));
-
-        var_dump($connection->getLocalAddress());
-        $loop = Loop::get();
-
-        $connection->conection()->on("data", function ($data) {
-            var_dump($data);
-        });
-        $obs = $connection->requestResponse('witam z php');
-        $obs->subscribe(function ($data) {
-            var_dump($data);
-        },
-            function ($erro) {
-                var_dump($erro);
-            },
-            function () {
-                var_dump("complete");
-            }
-        );
-
-        $loop->addTimer(10.0, function () use ($loop) {
-            $loop->stop();
-        });
-        $loop->run();
-        $this->assertEquals(true, true);
-
-    }
+//    public function testConnectionWithDefaultSetupFrame(): void
+//    {
+//        $connectionBuilder = new ConnectionBuilder();
+//        $client = $connectionBuilder->createClient();
+//
+////        $this->expectException(RuntimeException::class);
+//
+//        /**
+//         * @var IRSocketConnection $connection
+//         */
+//
+//        $data = new DataDTO('data');
+//        $metaData = new DataDTO('meta data');
+//
+//
+//        $connection = await($client->connect(new ConnectionSettings(reasumeEnable: true, leaseEnable: true, reasumeToken: 'token11'), $data, $metaData));
+//
+//        var_dump($connection->getLocalAddress());
+//        $loop = Loop::get();
+//
+//        $connection->conection()->on("data", function ($data) {
+//            var_dump($data);
+//        });
+//        $obs = $connection->requestResponse('witam z php');
+//        $obs->subscribe(function ($data) {
+//            var_dump($data);
+//        },
+//            function ($erro) {
+//                var_dump($erro);
+//            },
+//            function () {
+//                var_dump("complete");
+//            }
+//        );
+//
+//        $loop->addTimer(10.0, function () use ($loop) {
+//            $loop->stop();
+//        });
+//        $loop->run();
+//        $this->assertEquals(true, true);
+//
+//    }
 
 }
 

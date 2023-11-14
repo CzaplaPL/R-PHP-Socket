@@ -9,6 +9,10 @@ use App\Core\ArrayBuffer;
 use App\Core\DataDTO;
 use App\Core\Exception\WrongConfigurationException;
 
+/**
+ * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
+ * @SuppressWarnings(PHPMD.LongVariable)
+ */
 final class SetupFrame extends Frame
 {
     private const STREAM_ID = 0;
@@ -62,7 +66,7 @@ final class SetupFrame extends Frame
 
         if ($this->reasumeEnable) {
             $reasumeTokenSize = new ArrayBuffer();
-            $reasumeTokenSize->addUInt16($this->reasumeEnable ? strlen($this->reasumeToken ?? '') : 0);
+            $reasumeTokenSize->addUInt16(strlen($this->reasumeToken ?? ''));
             $toReturn .= $reasumeTokenSize->toString();
             $toReturn .= $this->reasumeToken ?? '';
         }

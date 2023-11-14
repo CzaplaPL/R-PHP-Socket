@@ -44,7 +44,7 @@ final class TCPClient implements IRSocketClient
                     $connection->write($sizeBuffer->toString().$value);
                     $resolver(new RSocketConnection($connection, $this->frameFactory));
                 }, function (Exception $e) use ($reject): void {
-                    var_dump($e);
+                    var_dump($e->getMessage());
                     // todo lepsze exceptiony
                     $reject($e);
                 });
