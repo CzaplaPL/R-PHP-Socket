@@ -8,7 +8,7 @@ class PayloadFrame
 {
     private int $streamId;
     private string $payload;
-    private int $hasMetadata;
+    private bool $hasMetadata;
     private bool $follows;
     private bool $complete;
     private bool $next;

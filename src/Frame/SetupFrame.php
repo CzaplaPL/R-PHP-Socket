@@ -4,7 +4,9 @@ declare(strict_types=1);
 
 namespace App\Frame;
 
+use App\Connection\Client\ConnectionSettings;
 use App\Core\ArrayBuffer;
+use App\Core\DataDTO;
 use App\Core\Exception\WrongConfigurationException;
 
 final class SetupFrame extends Frame
@@ -39,6 +41,17 @@ final class SetupFrame extends Frame
 
     }
 
+    public static function fromSettings(ConnectionSettings $settings): self
+    {
+        return new self(
+            $settings->getKeepAlive(),
+            $settings->getLifetime(),
+            $settings->isReasumeEnable(),
+            $settings->isLeaseEnable(),
+            $settings->getReasumeToken()
+        );
+    }
+
 
     public function serialize(): string
     {
@@ -49,12 +62,63 @@ final class SetupFrame extends Frame
         $buffer->addUInt16($this->minorVersion);
         $buffer->addUInt32($this->keepAlive);
         $buffer->addUInt32($this->lifetime);
-        $buffer->addUInt16(0);
+        $toReturn = $buffer->toString();
 
-        $sizeBuffer = new ArrayBuffer();
-        $sizeBuffer->addUInt24(count($buffer->getBuffer()));
+        if($this->reasumeEnable) {
+            $reasumeTokenSize = new ArrayBuffer();
+            $reasumeTokenSize->addUInt16($this->reasumeEnable ? strlen($this->reasumeToken?? ''): 0);
+            $toReturn .= $reasumeTokenSize->toString();
+            $toReturn .=  $this->reasumeToken ?? '';
+        }
 
-        return $sizeBuffer->ToString().$buffer->ToString();
+
+        $metaDataMimeTypeLenght = strlen($this->metadataMimeType);
+        $toReturn .= chr($metaDataMimeTypeLenght);
+        $toReturn .= $this->metadataMimeType;
+
+        $dataMimeTypeLenght = strlen($this->dataMimeType);
+        $toReturn .= chr($dataMimeTypeLenght);
+        $toReturn .= $this->dataMimeType;
+
+        if($this->metadata) {
+            $metaDataSizeBuffer = new ArrayBuffer();
+            $metaDataSizeBuffer->addUInt24(strlen($this->metadata));
+
+            $toReturn .= sprintf("%s%s", $metaDataSizeBuffer->toString(),$this->metadata);
+        }
+
+
+        return sprintf("%s%s",$toReturn,$this->data ?? '');
+    }
+
+    public function setData(DataDTO $dataDTO): self
+    {
+        return new self(
+            $this->keepAlive,
+            $this->lifetime,
+            $this->reasumeEnable,
+            $this->leaseEnable,
+            $this->reasumeToken,
+            $dataDTO->getMimeType(),
+            $this->metadataMimeType,
+            $this->metadata,
+            $dataDTO->getData(),
+        );
+    }
+
+    public function setMetaData(DataDTO $metaData): self
+    {
+        return new self(
+            $this->keepAlive,
+            $this->lifetime,
+            $this->reasumeEnable,
+            $this->leaseEnable,
+            $this->reasumeToken,
+            $this->dataMimeType,
+            $metaData->getMimeType(),
+            $metaData->getData(),
+            $this->data
+        );
     }
 
     private function generateTypeAndFlags(): int
@@ -71,8 +135,5 @@ final class SetupFrame extends Frame
         return $value;
     }
 
-    public function payload(): string
-    {
-        return '';
-    }
+
 }

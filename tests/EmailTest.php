@@ -5,10 +5,15 @@ declare(strict_types=1);
 namespace App\Tests;
 
 use App\Connection\Builder\ConnectionBuilder;
+use App\Connection\Client\ConnectionSettings;
 use App\Connection\IRSocketConnection;
+use App\Core\DataDTO;
+use App\Core\Enums\ConnectionType;
+use App\Core\Exception\WrongUrlException;
 use App\Email\Email;
 use Exception;
 use InvalidArgumentException;
+use phpDocumentor\Reflection\Types\Object_;
 use PHPUnit\Framework\TestCase;
 use React\Socket\ConnectionInterface;
 use Clue\React\Block;
@@ -20,7 +25,9 @@ use React\EventLoop\Loop;
 use React\Socket\TcpConnector;
 use React\Socket\SecureConnector;
 use React\Socket\TcpServer;
+use Rx\Subject\Subject;
 use function Clue\React\Block\await;
+use function React\Async\async;
 
 final class EmailTest extends TestCase
 {
@@ -82,7 +89,6 @@ final class EmailTest extends TestCase
 //        $connecting->then(function (ConnectionInterface $connection) {
 //            $connection->close();
 //        });
-
 
 
 //        $socket = new SocketServer('127.0.0.1:8080');
@@ -187,10 +193,16 @@ final class EmailTest extends TestCase
         /**
          * @var IRSocketConnection $connection
          */
-        $connection = await($client->connect());
+
+        $data = new DataDTO('data');
+        $metaData = new DataDTO('meta data');
+
+
+        $connection = await($client->connect(new ConnectionSettings(reasumeEnable: true, leaseEnable: true, reasumeToken: 'token11'), $data, $metaData));
 
         var_dump($connection->getLocalAddress());
         $loop = Loop::get();
+
         $connection->conection()->on("data", function ($data) {
             var_dump($data);
         });
@@ -215,3 +227,4 @@ final class EmailTest extends TestCase
     }
 
 }
+

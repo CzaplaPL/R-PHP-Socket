@@ -81,7 +81,7 @@ class ArrayBuffer
         return $number;
     }
 
-    public function ToString(): string
+    public function toString(): string
     {
         $stringValue = '';
 

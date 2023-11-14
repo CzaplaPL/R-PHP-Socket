@@ -21,14 +21,4 @@ abstract class Frame
     public function streamId(): int {
         return $this->streamId;
     }
-
-    public function complete(): bool {
-        return true;
-    }
-
-    public function next(): bool{
-        return true;
-    }
-
-    abstract public function payload(): string;
 }
