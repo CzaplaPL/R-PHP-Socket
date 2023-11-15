@@ -7,7 +7,7 @@ namespace App\Frame;
 use App\Connection\Client\ConnectionSettings;
 use App\Core\ArrayBuffer;
 use App\Core\DataDTO;
-use App\Core\Exception\WrongConfigurationException;
+use App\Core\Exception\ConnectionFailedException;
 
 /**
  * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
@@ -18,7 +18,7 @@ final class SetupFrame extends Frame
     private const STREAM_ID = 0;
 
     /**
-     * @throws WrongConfigurationException
+     * @throws ConnectionFailedException
      */
     public function __construct(
         private readonly int $keepAlive = 60000,
@@ -34,11 +34,11 @@ final class SetupFrame extends Frame
         parent::__construct(self::STREAM_ID);
 
         if ($this->keepAlive <= 0) {
-            throw WrongConfigurationException::wrongKeepAlive();
+            throw ConnectionFailedException::wrongKeepAlive();
         }
 
         if ($this->lifetime <= 0) {
-            throw WrongConfigurationException::wrongLifetime();
+            throw ConnectionFailedException::wrongLifetime();
         }
     }
 

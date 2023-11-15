@@ -4,30 +4,30 @@ declare(strict_types=1);
 
 namespace App\Frame\Factory;
 
-use _PHPStan_532094bc1\Nette\Neon\Exception;
 use App\Core\ArrayBuffer;
-use App\Frame\IFrame;
+use App\Frame\Frame;
+
 use App\Frame\PayloadFrame;
+use App\Frame\SetupFrame;
+use Exception;
 
 class FrameFactory implements IFrameFactory
 {
-    public function create(string $data): IFrame
+    public function create(string $data): Frame
     {
         $stringArray = str_split($data);
         $buffer = new ArrayBuffer(array_map(static fn ($char) => ord($char), $stringArray));
         $offset = 0;
-        $lenght = $buffer->getUInt24($offset);
-        $offset += 3;
         $streamId = $buffer->getUInt32($offset);
         $offset += 4;
         $typeAndFlag = $buffer->getUInt16($offset);
         $type = $typeAndFlag >> 10;
-        switch ($type) {
-            case 10:
-                return $this->createPayloadType($buffer, $offset, $streamId, $data);
-            default:
-                throw new Exception('nie znany typ');
-        }
+
+
+        return match ($type) {
+            1 =>  $this->createSetupType($buffer,$offset,$streamId,$data),
+            default => throw new Exception('nie znany typ'),
+        };
     }
 
     private function createPayloadType(ArrayBuffer $buffer, int $offset, int $streamId, string $data): PayloadFrame
@@ -42,5 +42,10 @@ class FrameFactory implements IFrameFactory
         $next = ($typeAndFlag & 0x20) === 32;
 
         return new PayloadFrame($streamId, substr($data, $offset), $hasMetaData, $follows, $complete, $next);
+    }
+
+    private function createSetupType($buffer, $offset, $streamId, $data): SetupFrame
+    {
+
     }
 }

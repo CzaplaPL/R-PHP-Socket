@@ -31,7 +31,7 @@ final class ExpectedAddressConstraint extends Constraint
         }
 
         // TODO potrzebny lepszy tekst
-        throw new ExpectationFailedException('tekst');
+        throw new ExpectationFailedException(sprintf('address %s not connected', $other));
     }
 
     public function toString(): string

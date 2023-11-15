@@ -14,7 +14,7 @@ use React\Socket\SocketServer;
 /**
  * @internal
  */
-final class TestServer implements IRSocketServer
+final class TCPTestServer implements IRSocketServer
 {
     /**
      * @var string[] $expectedConnectionsAddress
@@ -26,6 +26,11 @@ final class TestServer implements IRSocketServer
     private array $connectedAddresses = [];
 
     private ?SocketServer $socket = null;
+
+    public function __construct(private readonly string $adddres)
+    {
+    }
+
 
     public function expectConnectionFromAddress(string $address): void
     {
@@ -45,11 +50,6 @@ final class TestServer implements IRSocketServer
         return $constraints;
     }
 
-    public function pause(): void
-    {
-        $this->socket?->pause();
-    }
-
     public function close(): void
     {
         $this->socket?->removeAllListeners();
@@ -67,7 +67,7 @@ final class TestServer implements IRSocketServer
 
     private function createSocket(): void
     {
-        $this->socket = new SocketServer('127.0.0.1:9091');
+        $this->socket = new SocketServer($this->adddres);
 
         $this->socket->on('connection', function (ConnectionInterface $connection): void {
             if($connection->getRemoteAddress()) {
