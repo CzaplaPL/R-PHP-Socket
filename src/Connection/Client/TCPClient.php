@@ -11,12 +11,17 @@ use App\Core\Exception\ConnectionFailedException;
 use App\Core\Url;
 use App\Frame\Factory\IFrameFactory;
 use App\Frame\SetupFrame;
-use Exception;
 use React\Promise\Promise;
+use React\Promise\PromiseInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\ConnectorInterface;
-use React\Promise\PromiseInterface;
+use Throwable;
 
+/**
+ * @psalm-suppress TooManyTemplateParams
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ */
 final class TCPClient implements IRSocketClient
 {
     private IFrameFactory $frameFactory;
@@ -45,15 +50,16 @@ final class TCPClient implements IRSocketClient
                             $value = $setupFrame->serialize();
                             $sizeBuffer = new ArrayBuffer();
                             $sizeBuffer->addUInt24(strlen($value));
-                            $connection->write($sizeBuffer->toString() . $value);
+                            $connection->write($sizeBuffer->toString().$value);
                             $resolver(new RSocketConnection($connection, $this->frameFactory));
-                        } catch (\Throwable $error) {
+                        } catch (Throwable $error) {
                             $reject(ConnectionFailedException::errorOnSendSetupFrame($error));
                         }
                     },
-                    onRejected: function (Exception $error) use ($reject): void {
+                    onRejected: function (Throwable $error) use ($reject): void {
                         $reject(ConnectionFailedException::errorOnConnecting($this->url->getAddress(), $error));
-                    });
+                    }
+                );
         });
     }
 }

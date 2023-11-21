@@ -7,84 +7,125 @@ use React\Stream\WritableStreamInterface;
 
 class TestConnection implements ConnectionInterface
 {
+    private ?\Throwable $exceptionOnSendData = null;
 
-    public function getRemoteAddress()
+    /**
+     * @var mixed[]
+     */
+    private array $sendedData = [];
+    /**
+     * @var array<mixed,callable[]>
+     */
+    private array $listeners = [];
+
+    public function getRemoteAddress(): string
     {
        throw new \Exception("do implementacji");
     }
 
-    public function getLocalAddress()
+    public function getLocalAddress(): string
     {
         throw new \Exception("do implementacji");
     }
 
-    public function on($event, callable $listener)
+    public function on(mixed $event, callable $listener): ConnectionInterface
+    {
+        if (!isset($this->listeners[$event])) {
+            $this->listeners[$event] = [];
+        }
+
+        $this->listeners[$event][] = $listener;
+
+        return $this;
+    }
+
+    public function once(mixed $event, callable $listener): void
     {
         throw new \Exception("do implementacji");
     }
 
-    public function once($event, callable $listener)
+    public function removeListener(mixed $event, callable $listener): void
     {
         throw new \Exception("do implementacji");
     }
 
-    public function removeListener($event, callable $listener)
+    public function removeAllListeners(mixed $event = null): void
     {
         throw new \Exception("do implementacji");
     }
 
-    public function removeAllListeners($event = null)
+    public function listeners(mixed $event = null): void
     {
         throw new \Exception("do implementacji");
     }
 
-    public function listeners($event = null)
+    /**
+     * @param mixed[] $arguments
+     */
+    public function emit(mixed $event, array $arguments = []): void
     {
         throw new \Exception("do implementacji");
     }
 
-    public function emit($event, array $arguments = [])
+    public function isReadable(): bool
     {
         throw new \Exception("do implementacji");
     }
 
-    public function isReadable()
+    public function pause(): void
     {
         throw new \Exception("do implementacji");
     }
 
-    public function pause()
+    public function resume(): void
     {
         throw new \Exception("do implementacji");
     }
 
-    public function resume()
+    /**
+     * @param mixed[] $options
+     */
+    public function pipe(WritableStreamInterface $dest, array $options = array()): WritableStreamInterface
     {
         throw new \Exception("do implementacji");
     }
 
-    public function pipe(WritableStreamInterface $dest, array $options = array())
+    public function close(): void
     {
         throw new \Exception("do implementacji");
     }
 
-    public function close()
+    public function isWritable(): bool
     {
         throw new \Exception("do implementacji");
     }
 
-    public function isWritable()
+    public function write(mixed $data): bool
+    {
+        if($this->exceptionOnSendData) {
+            throw $this->exceptionOnSendData;
+        }
+
+        $this->sendedData[] = $data;
+
+        return true;
+    }
+
+    public function end($data = null): void
     {
         throw new \Exception("do implementacji");
     }
 
-    public function write($data)
+    /**
+     * @return mixed[]
+     */
+    public function getSendedData(): array
     {
-        throw new \Exception("do implementacji");
+        return $this->sendedData;
     }
 
-    public function end($data = null)
+    public function throwOnSendData(\Throwable|null $exception): void
     {
-        throw new \Exception("do implementacji");
+        $this->exceptionOnSendData = $exception;
     }
 }

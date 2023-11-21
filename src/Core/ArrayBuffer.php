@@ -81,6 +81,11 @@ class ArrayBuffer
         return $number;
     }
 
+    public function getUInt8(int $offset): int
+    {
+        return $this->buffer[$offset];
+    }
+
     public function toString(): string
     {
         $stringValue = '';

@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace App\Tests\Extensions;
 
 use App\Connection\Server\IRSocketServer;
-use App\Tests\Extensions\Constraint\ExpectedAddressConstraint;
+use App\Tests\Extensions\Constraint\ExpectedSendFrame;
 use PHPUnit\Framework\Constraint\Constraint;
 use React\EventLoop\Loop;
 use React\Socket\ConnectionInterface;
@@ -44,7 +44,7 @@ final class TCPTestServer implements IRSocketServer
     {
         $constraints = [];
         foreach ($this->expectedConnectionsAddress as $address) {
-            $constraints[$address] = new ExpectedAddressConstraint($this->connectedAddresses);
+            $constraints[$address] = new ExpectedSendFrame($this->connectedAddresses);
         }
 
         return $constraints;

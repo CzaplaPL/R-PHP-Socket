@@ -21,7 +21,7 @@ final class RSocketConnection implements IRSocketConnection
     {
         $this->frameFactory = $frameFactory;
         $this->streamId = 1;
-        $this->connection->on('data', function ($data): void {
+        $this->connection->on('data', function (string $data): void {
             $frame = $this->frameFactory->create($data);
             /** @var Subject|null $subject */
             $subject = $this->lisseners[$frame->streamId()];
@@ -39,11 +39,6 @@ final class RSocketConnection implements IRSocketConnection
     public function getLocalAddress(): ?string
     {
         return $this->connection->getLocalAddress();
-    }
-
-    public function conection(): ConnectionInterface
-    {
-        return $this->connection;
     }
 
     public function requestResponse(string $data): Observable

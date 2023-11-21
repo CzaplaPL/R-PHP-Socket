@@ -4,16 +4,11 @@ declare(strict_types=1);
 
 namespace App\Connection\Client;
 
-use App\Connection\IRSocketConnection;
 use App\Core\DataDTO;
 use React\Promise\PromiseInterface;
-use React\Socket\ConnectionInterface;
 
 interface IRSocketClient
 {
-    /**
-     * @return PromiseInterface<IRSocketConnection>
-     */
     public function connect(
         ConnectionSettings $settings = new ConnectionSettings(),
         DataDTO $data = null,

@@ -5,11 +5,10 @@ declare(strict_types=1);
 namespace App\Frame\Factory;
 
 use App\Core\ArrayBuffer;
+use App\Core\Exception\CreateFrameException;
 use App\Frame\Frame;
-
 use App\Frame\PayloadFrame;
 use App\Frame\SetupFrame;
-use Exception;
 
 class FrameFactory implements IFrameFactory
 {
@@ -23,10 +22,9 @@ class FrameFactory implements IFrameFactory
         $typeAndFlag = $buffer->getUInt16($offset);
         $type = $typeAndFlag >> 10;
 
-
         return match ($type) {
-            1 =>  $this->createSetupType($buffer,$offset,$streamId,$data),
-            default => throw new Exception('nie znany typ'),
+            1 => $this->createSetupType($buffer, $offset, $streamId, $data),
+            default => throw CreateFrameException::unknowType($type)
         };
     }
 
@@ -37,15 +35,78 @@ class FrameFactory implements IFrameFactory
 
         $hasMetaData = ($typeAndFlag & 0x100) === 256;
         $follows = ($typeAndFlag & 0x100) === 128;
-        $complete2 = ($typeAndFlag & 0x40);
         $complete = ($typeAndFlag & 0x40) === 64;
         $next = ($typeAndFlag & 0x20) === 32;
 
         return new PayloadFrame($streamId, substr($data, $offset), $hasMetaData, $follows, $complete, $next);
     }
 
-    private function createSetupType($buffer, $offset, $streamId, $data): SetupFrame
+    private function createSetupType(ArrayBuffer $buffer, int $offset, int $streamId, string $data): SetupFrame
     {
+        if (0 !== $streamId) {
+            throw CreateFrameException::wrongStreamIdToSetupFrame($streamId);
+        }
 
+        $typeAndFlag = $buffer->getUInt16($offset);
+        $offset += 2;
+
+        $hasMetaData = ($typeAndFlag & 0x100) === 256;
+        $reasume = ($typeAndFlag & 0x80) === 128;
+        $lease = ($typeAndFlag & 0x40) === 64;
+
+        $majorVersion = $buffer->getUInt16($offset);
+        $offset += 2;
+
+        $minorVersion = $buffer->getUInt16($offset);
+        $offset += 2;
+
+        if (Frame::MAJOR_VERSION !== $majorVersion || Frame::MINOR_VERSION !== $minorVersion) {
+            throw CreateFrameException::versionNotSuported($majorVersion, $minorVersion);
+        }
+
+        $keepAlive = $buffer->getUInt32($offset);
+        $offset += 4;
+
+        $lifetime = $buffer->getUInt32($offset);
+        $offset += 4;
+        $reasumeTokem = null;
+        if ($reasume) {
+            $reasumeTokenLenght = $buffer->getUInt16($offset);
+            $offset += 2;
+
+            $reasumeTokem = substr($data, $offset, $reasumeTokenLenght);
+            $offset += $reasumeTokenLenght;
+        }
+
+        $metaDataMimeTypeLenght = $buffer->getUInt8($offset);
+        ++$offset;
+        $metaDataMimeType = substr($data, $offset, $metaDataMimeTypeLenght);
+        $offset += $metaDataMimeTypeLenght;
+
+        $dataMimeTypeLenght = $buffer->getUInt8($offset);
+        ++$offset;
+        $dataMimeType = substr($data, $offset, $dataMimeTypeLenght);
+        $offset += $dataMimeTypeLenght;
+
+        $metaData = null;
+        if ($hasMetaData) {
+            $metaDataSize = $buffer->getUInt24($offset);
+            $offset += 3;
+            $metaData = substr($data, $offset, $metaDataSize);
+            $offset += $metaDataSize;
+        }
+        $data = substr($data, $offset);
+
+        return new SetupFrame(
+            keepAlive: $keepAlive,
+            lifetime: $lifetime,
+            reasumeEnable: $reasume,
+            leaseEnable: $lease,
+            reasumeToken: $reasumeTokem,
+            dataMimeType: $dataMimeType,
+            metadataMimeType: $metaDataMimeType,
+            metadata: $metaData,
+            data: $data
+        );
     }
 }

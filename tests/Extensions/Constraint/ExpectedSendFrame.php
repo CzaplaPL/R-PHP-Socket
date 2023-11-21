@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace App\Tests\Extensions\Constraint;
 
+use App\Frame\Frame;
 use PHPUnit\Framework\Constraint\Constraint;
 use PHPUnit\Framework\ExpectationFailedException;
 
-final class ExpectedAddressConstraint extends Constraint
+final class ExpectedSendFrame extends Constraint
 {
     /**
-     * @param string[] $connectedAddresses
+     * @param mixed[] $sendedFrame
      */
-    public function __construct(private array $connectedAddresses)
+    public function __construct(private array $sendedFrame)
     {
     }
 
@@ -22,7 +23,7 @@ final class ExpectedAddressConstraint extends Constraint
      */
     public function evaluate($other, string $description = '', bool $returnResult = false): ?bool
     {
-        if (in_array($other, $this->connectedAddresses, true)) {
+        if (in_array($other, $this->sendedFrame, true)) {
             return $returnResult ? true : null;
         }
 
@@ -31,11 +32,11 @@ final class ExpectedAddressConstraint extends Constraint
         }
 
         /** @phpstan-ignore-next-line */
-        throw new ExpectationFailedException(sprintf('address %s not connected', $other));
+        throw new ExpectationFailedException(sprintf('frame %s not sended', $other));
     }
 
     public function toString(): string
     {
-        return 'contains '.$this->exporter()->export($this->connectedAddresses);
+        return 'contains '.$this->exporter()->export($this->sendedFrame);
     }
 }

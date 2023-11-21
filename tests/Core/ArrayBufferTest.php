@@ -4,7 +4,7 @@ namespace App\Tests\Core;
 
 use App\Core\ArrayBuffer;
 use App\Core\Enums\ConnectionType;
-use App\Core\Exception\WrongUrlException;
+use App\Core\Exception\CreateFrameException;
 use App\Core\Url;
 use PHPUnit\Framework\TestCase;
 

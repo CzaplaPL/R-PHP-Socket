@@ -11,7 +11,7 @@ use App\Connection\Server\IRSocketServer;
 use App\Connection\Server\TCPServer;
 use App\Connection\Server\WSServer;
 use App\Core\Enums\ConnectionType;
-use App\Core\Exception\WrongUrlException;
+use App\Core\Exception\CreateFrameException;
 use App\Core\Url;
 use App\Frame\Factory\FrameFactory;
 use App\Frame\Factory\IFrameFactory;
@@ -62,7 +62,7 @@ final class ConnectionBuilder implements IConnectionBuilder
     private IFrameFactory $frameFactory;
 
     /**
-     * @throws WrongUrlException
+     * @throws CreateFrameException
      */
     public function __construct(string $address = '127.0.0.1:9090')
     {
@@ -176,6 +176,13 @@ final class ConnectionBuilder implements IConnectionBuilder
     public function setHeaders(array $headers): IConnectionBuilder
     {
         $this->headers = $headers;
+
+        return $this;
+    }
+
+    public function setConnector(ConnectorInterface $connector): IConnectionBuilder
+    {
+        $this->connector = $connector;
 
         return $this;
     }

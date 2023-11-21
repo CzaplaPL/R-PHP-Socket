@@ -6,6 +6,7 @@ use App\Connection\Client\ConnectionSettings;
 use App\Core\ArrayBuffer;
 use App\Core\DataDTO;
 use App\Core\Exception\ConnectionFailedException;
+use App\Core\Exception\WrongConfigurationException;
 use App\Frame\SetupFrame;
 use PHPUnit\Framework\TestCase;
 
@@ -73,13 +74,13 @@ class SetupFrameTest extends TestCase
 
     public function testExpectedExceptionOnWrongKeepAlive(): void
     {
-        $this->expectException(ConnectionFailedException::class);
+        $this->expectException(WrongConfigurationException::class);
         $setupFarame = new SetupFrame(keepAlive: 0);
     }
 
     public function testExpectedExceptionOnWrongLifetime(): void
     {
-        $this->expectException(ConnectionFailedException::class);
+        $this->expectException(WrongConfigurationException::class);
         $setupFarame = new SetupFrame(lifetime: 0);
     }
 

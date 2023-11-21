@@ -11,6 +11,7 @@ use App\Core\Url;
 use App\Frame\Factory\IFrameFactory;
 use React\Dns\Resolver\ResolverInterface;
 use React\EventLoop\LoopInterface;
+use React\Socket\ConnectorInterface;
 
 /**
  * @phpstan-type contextArray = array{
@@ -63,6 +64,8 @@ interface IConnectionBuilder
      * @param array<mixed> $headers
      */
     public function setHeaders(array $headers): self;
+
+    public function setConnector(ConnectorInterface $connector): self;
 
     public function createClient(): IRSocketClient;
 
