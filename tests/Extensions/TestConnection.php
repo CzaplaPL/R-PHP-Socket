@@ -46,7 +46,15 @@ class TestConnection implements ConnectionInterface
 
     public function removeListener(mixed $event, callable $listener): void
     {
-        throw new \Exception("do implementacji");
+        if (isset($this->listeners[$event])) {
+            $index = array_search($listener, $this->listeners[$event], true);
+            if (false !== $index) {
+                unset($this->listeners[$event][$index]);
+                if (count($this->listeners[$event]) === 0) {
+                    unset($this->listeners[$event]);
+                }
+            }
+        }
     }
 
     public function removeAllListeners(mixed $event = null): void
@@ -64,7 +72,9 @@ class TestConnection implements ConnectionInterface
      */
     public function emit(mixed $event, array $arguments = []): void
     {
-        throw new \Exception("do implementacji");
+        foreach ($this->listeners[$event] as $listener) {
+            $listener(...$arguments);
+        }
     }
 
     public function isReadable(): bool
@@ -102,7 +112,7 @@ class TestConnection implements ConnectionInterface
 
     public function write(mixed $data): bool
     {
-        if($this->exceptionOnSendData) {
+        if ($this->exceptionOnSendData) {
             throw $this->exceptionOnSendData;
         }
 

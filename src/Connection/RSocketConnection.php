@@ -6,6 +6,7 @@ namespace App\Connection;
 
 use App\Frame\Factory\IFrameFactory;
 use App\Frame\RequestResponseFrame;
+use Ratchet\Client\WebSocket;
 use React\Socket\ConnectionInterface;
 use Rx\Observable;
 use Rx\Subject\Subject;
@@ -17,7 +18,7 @@ final class RSocketConnection implements IRSocketConnection
     private array $lisseners = [];
     private IFrameFactory $frameFactory;
 
-    public function __construct(private readonly ConnectionInterface $connection, IFrameFactory $frameFactory)
+    public function __construct(private readonly ConnectionInterface|WebSocket $connection, IFrameFactory $frameFactory)
     {
         $this->frameFactory = $frameFactory;
         $this->streamId = 1;
@@ -46,7 +47,7 @@ final class RSocketConnection implements IRSocketConnection
         $frame = new RequestResponseFrame($this->streamId, $data);
         $subject = new Subject();
         $this->lisseners[$this->streamId] = $subject;
-        $this->connection->write($frame->serialize());
+        $this->send($frame->serialize());
         $this->streamId += 2;
 
         return $subject->asObservable();
@@ -55,6 +56,13 @@ final class RSocketConnection implements IRSocketConnection
     public function fireAndForget(string $data): void
     {
         $frame = new RequestResponseFrame($this->streamId, $data);
-        $this->connection->write($frame->serialize());
+        $this->send($frame->serialize());
+    }
+
+    private function send($data): bool{
+        if($this->connection::class === WebSocket::class){
+            return $this->connection->send($data);
+        }
+        return $this->connection->write($data);
     }
 }
