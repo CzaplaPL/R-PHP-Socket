@@ -9,7 +9,7 @@ use App\Connection\Client\ConnectionSettings;
 use App\Connection\IRSocketConnection;
 use App\Core\DataDTO;
 use App\Core\Enums\ConnectionType;
-use App\Core\Exception\CreateFrameException;
+use App\Core\Exception\CreateFrameOnUnsuportedVersionException;
 use App\Email\Email;
 use Exception;
 use InvalidArgumentException;

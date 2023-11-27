@@ -11,7 +11,6 @@ use App\Connection\Server\IRSocketServer;
 use App\Connection\Server\TCPServer;
 use App\Connection\Server\WSServer;
 use App\Core\Enums\ConnectionType;
-use App\Core\Exception\CreateFrameException;
 use App\Core\Url;
 use App\Frame\Factory\FrameFactory;
 use App\Frame\Factory\IFrameFactory;
@@ -61,9 +60,6 @@ final class ConnectionBuilder implements IConnectionBuilder
 
     private IFrameFactory $frameFactory;
 
-    /**
-     * @throws CreateFrameException
-     */
     public function __construct(string $address = '127.0.0.1:9090')
     {
         $this->url = Url::fromAddress($address);

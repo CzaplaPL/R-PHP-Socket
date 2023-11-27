@@ -20,10 +20,4 @@ class CreateFrameException extends Exception
     {
         return new self(sprintf('%d is wrong stream number to SetupFrame. expected 0', $streamId));
     }
-
-    #[Pure]
-    public static function versionNotSuported(int $majorVersion, int $minorVersion): self
-    {
-        return new self(sprintf('wersion %d.%d not suported', $majorVersion, $minorVersion));
-    }
 }

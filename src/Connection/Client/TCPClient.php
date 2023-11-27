@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Connection\Client;
 
-use App\Connection\RSocketConnection;
+use App\Connection\TCPRSocketConnection;
 use App\Core\ArrayBuffer;
 use App\Core\DataDTO;
 use App\Core\Exception\ConnectionFailedException;
@@ -51,7 +51,7 @@ final class TCPClient implements IRSocketClient
                             $sizeBuffer = new ArrayBuffer();
                             $sizeBuffer->addUInt24(strlen($value));
                             $connection->write($sizeBuffer->toString().$value);
-                            $resolver(new RSocketConnection($connection, $this->frameFactory));
+                            $resolver(new TCPRSocketConnection($connection, $this->frameFactory, true));
                         } catch (Throwable $error) {
                             $reject(ConnectionFailedException::errorOnSendSetupFrame($error));
                         }

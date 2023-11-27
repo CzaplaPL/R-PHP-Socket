@@ -6,6 +6,7 @@ namespace App\Frame\Factory;
 
 use App\Core\ArrayBuffer;
 use App\Core\Exception\CreateFrameException;
+use App\Core\Exception\CreateFrameOnUnsuportedVersionException;
 use App\Frame\Frame;
 use App\Frame\PayloadFrame;
 use App\Frame\SetupFrame;
@@ -61,7 +62,7 @@ class FrameFactory implements IFrameFactory
         $offset += 2;
 
         if (Frame::MAJOR_VERSION !== $majorVersion || Frame::MINOR_VERSION !== $minorVersion) {
-            throw CreateFrameException::versionNotSuported($majorVersion, $minorVersion);
+            throw CreateFrameOnUnsuportedVersionException::versionNotSuported($majorVersion, $minorVersion);
         }
 
         $keepAlive = $buffer->getUInt32($offset);

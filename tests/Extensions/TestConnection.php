@@ -2,6 +2,7 @@
 
 namespace App\Tests\Extensions;
 
+use React\EventLoop\Loop;
 use React\Socket\ConnectionInterface;
 use React\Stream\WritableStreamInterface;
 

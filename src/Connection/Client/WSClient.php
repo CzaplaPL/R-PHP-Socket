@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace App\Connection\Client;
 
-use App\Connection\RSocketConnection;
+use App\Connection\WSRSocketConnection;
 use App\Core\DataDTO;
 use App\Core\Exception\ConnectionFailedException;
 use App\Core\Url;
@@ -16,22 +16,24 @@ use Throwable;
 
 final class WSClient implements IRSocketClient
 {
+    /**
+     * @param mixed[] $subProtocols
+     * @param mixed[] $headers
+     */
     public function __construct(
         private readonly Url $url,
         private readonly IFrameFactory $frameFactory,
         private readonly Connector $connector,
         private readonly array $subProtocols,
         private readonly array $headers
-    )
-    {
+    ) {
     }
 
     public function connect(
         ConnectionSettings $settings = new ConnectionSettings(),
-        DataDTO            $data = null,
-        DataDTO            $metaData = null
-    ): Promise
-    {
+        DataDTO $data = null,
+        DataDTO $metaData = null
+    ): Promise {
         $setupFrame = SetupFrame::fromSettings($settings);
 
         if ($data) {
@@ -47,16 +49,15 @@ final class WSClient implements IRSocketClient
                 onFulfilled: function ($connection) use ($resolver, $reject, $setupFrame): void {
                     try {
                         $connection->send($setupFrame->serialize());
-                        $resolver(new RSocketConnection($connection, $this->frameFactory));
+                        $resolver(new WSRSocketConnection($connection, $this->frameFactory, true));
                     } catch (Throwable $error) {
                         $reject(ConnectionFailedException::errorOnSendSetupFrame($error));
-
                     }
-
                 },
                 onRejected: function (Throwable $error) use ($reject): void {
                     $reject(ConnectionFailedException::errorOnConnecting($this->url->getAddress(), $error));
-                });
+                }
+            );
         });
     }
 }

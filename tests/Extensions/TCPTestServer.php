@@ -5,11 +5,14 @@ declare(strict_types=1);
 namespace App\Tests\Extensions;
 
 use App\Connection\Server\IRSocketServer;
+use App\Connection\Server\ServerSettings;
 use App\Tests\Extensions\Constraint\ExpectedSendFrame;
 use PHPUnit\Framework\Constraint\Constraint;
 use React\EventLoop\Loop;
 use React\Socket\ConnectionInterface;
 use React\Socket\SocketServer;
+use Rx\Observable;
+use Rx\Subject\Subject;
 
 /**
  * @internal
@@ -24,6 +27,11 @@ final class TCPTestServer implements IRSocketServer
      * @var string[] $connectedAddresses
      */
     private array $connectedAddresses = [];
+
+    /**
+     * @var ConnectionInterface[] $connections
+     */
+    private array $connections = [];
 
     private ?SocketServer $socket = null;
 
@@ -70,9 +78,35 @@ final class TCPTestServer implements IRSocketServer
         $this->socket = new SocketServer($this->adddres);
 
         $this->socket->on('connection', function (ConnectionInterface $connection): void {
+            $this->connections[] =$connection;
             if($connection->getRemoteAddress()) {
                 $this->connectedAddresses[] = $connection->getRemoteAddress();
             }
         });
     }
+
+    public function bind(ServerSettings $settings = new ServerSettings(), ?callable $errorHandler = null): void
+    {
+        $this->createSocket();
+    }
+
+    /**
+     * @return ConnectionInterface[]
+     */
+    public function getConnections(): array
+    {
+        return $this->connections;
+    }
+
+    public function newConnections(): Observable
+    {
+        return new Subject();
+    }
+
+    public function closedConnections(): Observable
+    {
+        return new Subject();
+    }
+
+
 }

@@ -5,6 +5,7 @@ namespace App\Tests\Frame\Factory;
 use App\Core\ArrayBuffer;
 use App\Core\Enums\ConnectionType;
 use App\Core\Exception\CreateFrameException;
+use App\Core\Exception\CreateFrameOnUnsuportedVersionException;
 use App\Core\Exception\WrongUrlException;
 use App\Core\Url;
 use App\Frame\Factory\FrameFactory;
@@ -72,7 +73,7 @@ final class SetupFrameFactoryTest extends TestCase
         $oldBuffer[6] = 1;
         $newBuffer = new ArrayBuffer($oldBuffer);
 
-        $this->expectException(CreateFrameException::class);
+        $this->expectException(CreateFrameOnUnsuportedVersionException::class);
 
         $factory = new FrameFactory();
         $factory->create($newBuffer->toString());
@@ -87,7 +88,7 @@ final class SetupFrameFactoryTest extends TestCase
         $oldBuffer[8] = 1;
         $newBuffer = new ArrayBuffer($oldBuffer);
 
-        $this->expectException(CreateFrameException::class);
+        $this->expectException(CreateFrameOnUnsuportedVersionException::class);
 
         $factory = new FrameFactory();
         $factory->create($newBuffer->toString());

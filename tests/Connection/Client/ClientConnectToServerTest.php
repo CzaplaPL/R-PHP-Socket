@@ -3,9 +3,12 @@
 namespace App\Tests\Connection\Client;
 
 use App\Connection\Builder\ConnectionBuilder;
-use App\Connection\IRSocketConnection;
+use App\Connection\RSocketConnection;
+use App\Connection\TCPRSocketConnection;
 use App\Core\Exception\ConnectionFailedException;
 use App\Tests\RSocketTestCase;
+use React\EventLoop\Loop;
+use React\EventLoop\LoopInterface;
 use RuntimeException;
 use function Clue\React\Block\await;
 
@@ -18,11 +21,11 @@ final class ClientConnectToServerTest extends RSocketTestCase
         $client = $connectionBuilder->createClient();
 
         /**
-         * @var IRSocketConnection $connection
+         * @var TCPRSocketConnection $connection
          */
         $connection = await($client->connect());
 
-        $this->TCPRSocketServer->expectConnectionFromAddress($connection->getLocalAddress() ?? '');
+        $this->TCPRSocketServer->expectConnectionFromAddress( $connection->getLocalAddress());
     }
 
     public function testConnectionRejectWhenServerNotAvailable(): void
@@ -34,7 +37,7 @@ final class ClientConnectToServerTest extends RSocketTestCase
         $this->expectException(ConnectionFailedException::class);
 
         /**
-         * @var IRSocketConnection $connection
+         * @var RSocketConnection $connection
          */
         $connection = await($client->connect());
     }

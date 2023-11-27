@@ -6,6 +6,7 @@ namespace App\Tests;
 
 use App\Frame\Frame;
 use App\Frame\SetupFrame;
+use App\Tests\Extensions\TCPTestClient;
 use App\Tests\Extensions\TCPTestServer;
 use App\Tests\Extensions\TestConnector;
 use PHPUnit\Framework\TestCase;
@@ -15,12 +16,14 @@ class RSocketTestCase extends TestCase
     public const TCP_ADDRESS = '127.0.0.1:9091';
     protected readonly TCPTestServer $TCPRSocketServer;
     private ?TestConnector $testConnector = null;
+    protected TCPTestClient $testClient ;
 
 
     public function __construct()
     {
         parent::__construct();
         $this->TCPRSocketServer = new TCPTestServer(self::TCP_ADDRESS);
+        $this->testClient = new TCPTestClient();
     }
 
     protected function setUp(): void
@@ -42,6 +45,8 @@ class RSocketTestCase extends TestCase
             $this->assertThat($value, $constraint);
         }
         $this->testConnector = null;
+
+        $this->testClient->close();
     }
 
     protected function getTestConnector(): TestConnector
