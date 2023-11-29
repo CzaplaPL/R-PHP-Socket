@@ -10,6 +10,7 @@ use App\Core\Exception\ConnectionFailedException;
 use App\Core\Url;
 use App\Frame\Factory\IFrameFactory;
 use App\Frame\SetupFrame;
+use Ramsey\Uuid\Uuid;
 use Ratchet\Client\Connector;
 use React\Promise\Promise;
 use Throwable;
@@ -49,7 +50,7 @@ final class WSClient implements IRSocketClient
                 onFulfilled: function ($connection) use ($resolver, $reject, $setupFrame): void {
                     try {
                         $connection->send($setupFrame->serialize());
-                        $resolver(new WSRSocketConnection($connection, $this->frameFactory, true));
+                        $resolver(new WSRSocketConnection(Uuid::uuid4(), $connection, $this->frameFactory,));
                     } catch (Throwable $error) {
                         $reject(ConnectionFailedException::errorOnSendSetupFrame($error));
                     }

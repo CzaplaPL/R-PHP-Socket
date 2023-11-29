@@ -7,6 +7,8 @@ namespace App\Frame\Factory;
 use App\Core\ArrayBuffer;
 use App\Core\Exception\CreateFrameException;
 use App\Core\Exception\CreateFrameOnUnsuportedVersionException;
+use App\Frame\Enums\ErrorType;
+use App\Frame\ErrorFrame;
 use App\Frame\Frame;
 use App\Frame\PayloadFrame;
 use App\Frame\SetupFrame;
@@ -25,6 +27,7 @@ class FrameFactory implements IFrameFactory
 
         return match ($type) {
             1 => $this->createSetupType($buffer, $offset, $streamId, $data),
+            11 => $this->createErrorType($buffer, $offset, $streamId, $data),
             default => throw CreateFrameException::unknowType($type)
         };
     }
@@ -108,6 +111,20 @@ class FrameFactory implements IFrameFactory
             metadataMimeType: $metaDataMimeType,
             metadata: $metaData,
             data: $data
+        );
+    }
+
+    private function createErrorType(ArrayBuffer $buffer, int $offset, int $streamId, string $data): ErrorFrame
+    {
+        $offset += 2;
+        $errorType = $buffer->getUInt32($offset);
+        $offset += 4;
+        $message = substr($data, $offset);
+
+        return new ErrorFrame(
+            $streamId,
+            ErrorType::tryFrom($errorType),
+            $message
         );
     }
 }

@@ -11,6 +11,7 @@ use App\Connection\WSRSocketConnection;
 use App\Core\ArrayBuffer;
 use App\Core\DataDTO;
 use App\Core\Exception\ConnectionFailedException;
+use App\Frame\Factory\FrameFactory;
 use App\Frame\SetupFrame;
 use App\Tests\Extensions\Constraint\ExpectedSendFrame;
 use PHPUnit\Framework\Constraint\Constraint;
@@ -20,6 +21,8 @@ use React\Promise\PromiseInterface;
 use React\Socket\ConnectionInterface;
 use React\Socket\Connector;
 use React\Socket\SocketServer;
+use Rx\Observable;
+use Rx\Subject\Subject;
 use Throwable;
 
 /**
@@ -28,6 +31,16 @@ use Throwable;
 final class TCPTestClient
 {
     private ?ConnectionInterface $connection = null;
+    private Observable $recivedMessage;
+    private int $sizeOfNextFrame = 0;
+    private string $previusData = '';
+
+
+    public function __construct(private FrameFactory $frameFactory)
+    {
+        $this->recivedMessage = new Subject();
+    }
+
 
     public function connect(string $url): PromiseInterface
     {
@@ -38,6 +51,13 @@ final class TCPTestClient
                     onFulfilled: function (ConnectionInterface $connection) use ($resolver, $reject): void {
                         try {
                             $this->connection = $connection;
+                            $this->connection->on('data', function (string $data){
+                                foreach ($this->decodeFrames($data) as $frame){
+                                    $this->recivedMessage->onNext($frame);
+                                }
+
+
+                            });
                             $resolver($connection);
                         } catch (Throwable $error) {
                             $reject($error);
@@ -52,7 +72,8 @@ final class TCPTestClient
 
     public function SendSetupFrame(
         ConnectionSettings $settings = new ConnectionSettings(),
-        DataDTO $data = null, DataDTO $metaData = null
+        DataDTO $data = null,
+        DataDTO $metaData = null
     ): void{
         if($this->connection === null) {
             throw new \Exception("Client Not Connected");
@@ -69,7 +90,7 @@ final class TCPTestClient
         $this->write($setupFrame->serialize());
     }
 
-    private function write(string $data): void
+    public function write(string $data): void
     {
         $sizeBuffer = new ArrayBuffer();
         $sizeBuffer->addUInt24(strlen($data));
@@ -84,4 +105,46 @@ final class TCPTestClient
         $this->connection?->close();
     }
 
+    public function recivedMessage(): Observable
+    {
+        return $this->recivedMessage->asObservable();
+    }
+
+    private function decodeFrames(string $data): iterable
+    {
+        $data = $this->previusData.$data;
+
+        if (0 === $this->sizeOfNextFrame) {
+            $this->sizeOfNextFrame = $this->getFrameSize($data);
+            $data = substr($data, 3);
+        }
+
+        while ($this->sizeOfNextFrame > 0 && strlen($data) >= $this->sizeOfNextFrame) {
+            $frameString = substr($data, 0, $this->sizeOfNextFrame);
+
+            yield $this->frameFactory->create($frameString);
+
+            $data = substr($data, $this->sizeOfNextFrame);
+            $this->sizeOfNextFrame = $this->getFrameSize($data);
+            $data = substr($data, 3);
+        }
+
+        $this->previusData = $data;
+    }
+
+    private function getFrameSize(string $data): int
+    {
+        if (strlen($data) < 3) {
+            return 0;
+        }
+
+        $sizeString = substr($data, 0, 3);
+        $sizeBuffer = new ArrayBuffer([
+            ord($sizeString[0]),
+            ord($sizeString[1]),
+            ord($sizeString[2]),
+        ]);
+
+        return $sizeBuffer->getUInt24(0);
+    }
 }

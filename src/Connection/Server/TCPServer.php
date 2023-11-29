@@ -4,12 +4,15 @@ declare(strict_types=1);
 
 namespace App\Connection\Server;
 
+use App\Connection\ClosedConnection;
+use App\Connection\NewConnection;
 use App\Connection\RSocketConnection;
 use App\Connection\TCPRSocketConnection;
+use App\Core\Exception\ServerErrorException;
 use App\Core\Url;
 use App\Frame\Factory\IFrameFactory;
-use App\Frame\Frame;
 use App\Frame\SetupFrame;
+use Ramsey\Uuid\Uuid;
 use React\Socket\ConnectionInterface;
 use React\Socket\ServerInterface;
 use React\Socket\SocketServer;
@@ -19,6 +22,7 @@ use Rx\Subject\Subject;
 final class TCPServer implements IRSocketServer
 {
     private ?ServerInterface $server = null;
+    private Subject $subscriptions;
     private Subject $newConnectionsSubject;
     private Subject $closedConnectionsSubject;
     /**
@@ -33,17 +37,32 @@ final class TCPServer implements IRSocketServer
         $this->newConnectionsSubject = new Subject();
         $this->closedConnectionsSubject = new Subject();
         $this->settings = new ServerSettings();
+        $this->subscriptions = new Subject();
     }
 
     public function bind(ServerSettings $settings = new ServerSettings(), callable $errorHandler = null): void
     {
+        if ($this->server) {
+            throw ServerErrorException::ServerAlreadyBinding();
+        }
+
         $this->settings = $settings;
         $this->server = new SocketServer($this->url->getAddress());
         $this->server->on('connection', function (ConnectionInterface $connection): void {
-            $newConection = new TCPRSocketConnection($connection, $this->frameFactory);
-            $newConection->addLissener(RSocketConnection::SETUP_LISSENER_KEY, $this->akceptConnection(...));
-            $newConection->addLissener(RSocketConnection::SETUPED_LISSENER_KEY, $this->successfullConnected(...));
-            $newConection->addLissener(RSocketConnection::CLOSE_LISSENER_KEY, $this->closeConnection(...));
+            $id = Uuid::uuid4();
+            $newConection = new TCPRSocketConnection($id, $connection, $this->frameFactory, $this->settings);
+            $newConection->onConnect()->takeUntil($this->subscriptions)->subscribe(function (SetupFrame $setupFrame) use ($newConection): void {
+                $this->newConnectionsSubject->onNext(new NewConnection($newConection, $setupFrame));
+            });
+            $newConection->onClose()->takeUntil($this->subscriptions)->subscribe(
+                function (ClosedConnection $closedConnection): void {
+                    if (false === $closedConnection->connection->isReasumeEnable()) {
+                        unset($this->connections[$closedConnection->connection->id->toString()]);
+                    }
+                    $this->closedConnectionsSubject->onNext($closedConnection);
+                }
+            );
+            $this->connections[$id->toString()] = $newConection;
         });
         if ($errorHandler) {
             $this->server->on('error', $errorHandler);
@@ -60,7 +79,13 @@ final class TCPServer implements IRSocketServer
 
     public function close(): void
     {
+        foreach ($this->connections as $connection) {
+            $connection->close();
+        }
+
         $this->server?->close();
+
+        $this->server = null;
     }
 
     public function getConnection(string $id): ?RSocketConnection
@@ -103,20 +128,8 @@ final class TCPServer implements IRSocketServer
         }
     }
 
-    private function akceptConnection(SetupFrame $frame, RSocketConnection $connection): ?Frame
+    public function __destruct()
     {
-        $this->connections[] = $connection;
-
-        return null;
-    }
-
-    private function successfullConnected(RSocketConnection $connection): void
-    {
-        $this->newConnectionsSubject->onNext($connection);
-    }
-
-    private function closeConnection(RSocketConnection $connection): void
-    {
-        $this->closedConnectionsSubject->onNext($connection);
+        $this->subscriptions->onCompleted();
     }
 }

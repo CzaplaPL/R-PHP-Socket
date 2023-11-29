@@ -5,6 +5,7 @@ namespace App\Tests\Connection\Client;
 use App\Connection\Builder\ConnectionBuilder;
 use App\Connection\Client\ConnectionSettings;
 use App\Connection\Client\TCPClient;
+use App\Connection\RSocketConnection;
 use App\Core\ArrayBuffer;
 use App\Core\DataDTO;
 use App\Core\Enums\ConnectionType;
@@ -15,9 +16,20 @@ use App\Tests\Extensions\TestConnector;
 use App\Tests\RSocketTestCase;
 use PHPUnit\Framework\TestCase;
 use function React\Async\await;
+use function React\Promise\Timer\timeout;
 
 class TCPClientConnectTest extends RSocketTestCase
 {
+    public function testConnectionRejectWhenServerNotAvailable(): void
+    {
+        $connectionBuilder = new ConnectionBuilder(self::TCP_ADDRESS);
+        $client = $connectionBuilder->createClient();
+
+        $this->expectException(ConnectionFailedException::class);
+
+        await($client->connect());
+    }
+
     public function testSendDefaultSetupFrameOnConnect(): void
     {
         $address = '127.0.0.1:9090';
@@ -35,7 +47,12 @@ class TCPClientConnectTest extends RSocketTestCase
             ->setConnector($testConnector)
             ->createClient();
 
-        await($client->connect());
+        /**
+         * @var RSocketConnection $connection
+         */
+        $connection = await(timeout($client->connect(),self::TIMEOUT));
+
+        $connection->connect();
     }
 
     public function testSendConfigureSetupFrameOnConnect(): void
@@ -72,7 +89,14 @@ class TCPClientConnectTest extends RSocketTestCase
             ->setConnector($testConnector)
             ->createClient();
 
-        await($client->connect($settings, $data, $metaData));
+        /**
+         * @var RSocketConnection $connection
+         */
+        $connection = await(timeout($client->connect(),self::TIMEOUT));
+
+        $connection->connect( $settings, $data, $metaData);
+
+
     }
 
     public function testThrowExceptionWhenErrorOnSendSetupFrameOnConnect(): void
@@ -86,6 +110,11 @@ class TCPClientConnectTest extends RSocketTestCase
 
         $this->expectException(ConnectionFailedException::class);
 
-        await($client->connect());
+        /**
+         * @var RSocketConnection $connection
+         */
+        $connection = await(timeout($client->connect(),self::TIMEOUT));
+
+        $connection->connect();
     }
 }

@@ -44,6 +44,7 @@
     },
     "require": {
         "cboden/ratchet": "^0.4.4",
+        "ramsey/uuid": "^4.7",
         "ratchet/pawl": "^0.4.1",
         "react/async": "^4.1",
         "react/socket": "1.14.0",

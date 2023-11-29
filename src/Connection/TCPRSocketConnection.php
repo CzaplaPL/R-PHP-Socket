@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Connection;
 
 use App\Core\ArrayBuffer;
+use App\Frame\Frame;
 
 class TCPRSocketConnection extends RSocketConnection
 {
@@ -39,6 +40,23 @@ class TCPRSocketConnection extends RSocketConnection
         }
 
         $this->previusData = $data;
+    }
+
+    public function send(Frame $frame): bool
+    {
+        $value = $frame->serialize();
+        $sizeBuffer = new ArrayBuffer();
+        $sizeBuffer->addUInt24(strlen($value));
+
+        return $this->connection->write($sizeBuffer->toString().$value);
+    }
+
+    protected function end(Frame $frame): void
+    {
+        $value = $frame->serialize();
+        $sizeBuffer = new ArrayBuffer();
+        $sizeBuffer->addUInt24(strlen($value));
+        $this->connection->end($sizeBuffer->toString().$value);
     }
 
     private function getFrameSize(string $data): int

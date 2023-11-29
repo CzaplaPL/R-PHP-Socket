@@ -8,6 +8,7 @@ use App\Connection\Client\ConnectionSettings;
 use App\Core\ArrayBuffer;
 use App\Core\DataDTO;
 use App\Core\Exception\WrongConfigurationException;
+use JetBrains\PhpStorm\Pure;
 
 /**
  * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
@@ -15,20 +16,20 @@ use App\Core\Exception\WrongConfigurationException;
  */
 final class SetupFrame extends Frame
 {
-    private const STREAM_ID = 0;
+    public const SETUP_STREAM_ID = 0;
 
     public function __construct(
-        private readonly int $keepAlive = 60000,
-        private readonly int $lifetime = 300000,
-        private readonly bool $reasumeEnable = false,
-        private readonly bool $leaseEnable = false,
-        private readonly ?string $reasumeToken = null,
-        private readonly string $dataMimeType = 'application/octet-stream',
-        private readonly string $metadataMimeType = 'application/octet-stream',
-        private readonly ?string $metadata = null,
-        private readonly ?string $data = null,
+        public readonly int $keepAlive = 60000,
+        public readonly int $lifetime = 300000,
+        public readonly bool $reasumeEnable = false,
+        public readonly bool $leaseEnable = false,
+        public readonly ?string $reasumeToken = null,
+        public readonly string $dataMimeType = 'application/octet-stream',
+        public readonly string $metadataMimeType = 'application/octet-stream',
+        public readonly ?string $metadata = null,
+        public readonly ?string $data = null,
     ) {
-        parent::__construct(self::STREAM_ID);
+        parent::__construct(self::SETUP_STREAM_ID);
 
         if ($this->keepAlive <= 0) {
             throw WrongConfigurationException::wrongKeepAlive();
@@ -128,5 +129,17 @@ final class SetupFrame extends Frame
         $value = $value << 6;
 
         return $value;
+    }
+
+    #[Pure]
+    public function getMetaData(): DataDTO
+    {
+        return new DataDTO($this->metadata, $this->metadataMimeType);
+    }
+
+    #[Pure]
+    public function getData(): DataDTO
+    {
+        return new DataDTO($this->data, $this->dataMimeType);
     }
 }

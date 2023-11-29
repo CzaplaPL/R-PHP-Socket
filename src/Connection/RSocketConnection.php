@@ -4,37 +4,49 @@ declare(strict_types=1);
 
 namespace App\Connection;
 
+use App\Connection\Client\ConnectionSettings;
+use App\Connection\Server\ServerSettings;
+use App\Core\DataDTO;
+use App\Core\Exception\ConnectionFailedException;
 use App\Core\Exception\CreateFrameOnUnsuportedVersionException;
+use App\Frame\Enums\ErrorType;
+use App\Frame\ErrorFrame;
 use App\Frame\Factory\IFrameFactory;
 use App\Frame\Frame;
 use App\Frame\RequestResponseFrame;
 use App\Frame\SetupFrame;
+use Ramsey\Uuid\UuidInterface;
 use Ratchet\Client\WebSocket;
 use React\Socket\ConnectionInterface;
 use Rx\Observable;
 use Rx\Subject\Subject;
+use Throwable;
 
 abstract class RSocketConnection
 {
-    public const SETUP_LISSENER_KEY = 'setup';
-    public const SETUPED_LISSENER_KEY = 'setuped';
-    public const CLOSE_LISSENER_KEY = 'close';
+    private readonly Subject $setupedSubject;
+    private readonly Subject $closeSubject;
+    protected bool $connectIsSetuped = false;
+    protected bool $reasumeEnable = false;
     // todo VO
-    protected int $streamId;
-
-    /**
-     * @var array<string|int, callable[]>
-     */
-    protected array $lisseners = [];
+    protected int $nextStreamId;
 
     public function __construct(
+        public readonly UuidInterface $id,
         protected readonly ConnectionInterface|WebSocket $connection,
         protected readonly IFrameFactory $frameFactory,
-        protected bool $connectIsSetuped = false,
+        protected readonly ServerSettings $settings = new ServerSettings(),
     ) {
-        $this->streamId = 1;
+        $this->setupedSubject = new Subject();
+        $this->closeSubject = new Subject();
+        $this->nextStreamId = 1;
         $this->connection->on('data', $this->handleData(...));
         $this->connection->on('close', $this->handleClose(...));
+    }
+
+    public function close(): void
+    {
+        $this->connection->close();
     }
 
     /**
@@ -42,66 +54,114 @@ abstract class RSocketConnection
      */
     abstract protected function decodeFrames(string $data): iterable;
 
-    public function requestResponse(string $data): Observable
-    {
-        $frame = new RequestResponseFrame($this->streamId, $data);
-        $subject = new Subject();
-        $this->lisseners[$this->streamId] = $subject;
-        $this->send($frame);
-        $this->streamId += 2;
+    abstract protected function send(Frame $frame): bool;
 
-        return $subject->asObservable();
-    }
+    abstract protected function end(Frame $frame): void;
 
-    public function fireAndForget(string $data): void
+    public function connect(ConnectionSettings $settings = new ConnectionSettings(), DataDTO $data = null, DataDTO $metaData = null): void
     {
-        $frame = new RequestResponseFrame($this->streamId, $data);
-        $this->send($frame);
-    }
+        try {
+            $setupFrame = SetupFrame::fromSettings($settings);
 
-    public function addLissener(string|int $event, callable $setupLissener): void
-    {
-        if (!isset($this->lisseners[$event])) {
-            $this->lisseners[$event] = [];
+            if ($setupFrame->reasumeEnable) {
+                $this->reasumeEnable = true;
+            }
+
+            if ($data) {
+                $setupFrame = $setupFrame->setData($data);
+            }
+            if ($metaData) {
+                $setupFrame = $setupFrame->setMetaData($metaData);
+            }
+
+            $this->send($setupFrame);
+            $this->connectIsSetuped = true;
+        } catch (Throwable $error) {
+            throw ConnectionFailedException::errorOnSendSetupFrame($error);
         }
-        $this->lisseners[$event][] = $setupLissener;
+    }
+
+    public function isConnectSetuped(): bool
+    {
+        return $this->connectIsSetuped;
+    }
+
+    public function onClose(): Observable
+    {
+        return $this->closeSubject->asObservable();
+    }
+
+    public function onConnect(): Observable
+    {
+        return $this->setupedSubject->asObservable();
+    }
+
+    public function isReasumeEnable(): bool
+    {
+        return $this->reasumeEnable;
     }
 
     private function setupConnection(SetupFrame $frame): void
     {
-        if (!isset($this->lisseners[self::SETUP_LISSENER_KEY])) {
-            // sendErrorFrame
-            return;
-        }
-
         if ($this->connectIsSetuped) {
-            // sendErrorFrame
-            return;
-        }
-
-        $errorFrame = null;
-        foreach ($this->lisseners[self::SETUP_LISSENER_KEY] as $lissener) {
-            $errorFrame = $lissener($frame, $this);
-        }
-
-        if ($errorFrame) {
-            $this->send($errorFrame);
+            $this->send(new ErrorFrame(
+                SetupFrame::SETUP_STREAM_ID,
+                ErrorType::REJECTED_SETUP,
+                'The connection is already setuped'
+            ));
 
             return;
         }
+
+        if ($frame->reasumeEnable && false === $this->settings->isReasumeEnable()) {
+            $this->end(new ErrorFrame(
+                SetupFrame::SETUP_STREAM_ID,
+                ErrorType::UNSUPPORTED_SETUP,
+                'No resume support'
+            ));
+
+            return;
+        }
+
+        if ($this->settings->isLeaseRequire() && false === $frame->leaseEnable) {
+            $this->end(new ErrorFrame(
+                SetupFrame::SETUP_STREAM_ID,
+                ErrorType::REJECTED_SETUP,
+                'Server need lease'
+            ));
+
+            return;
+        }
+
+        if (
+            $frame->leaseEnable
+            && false === $this->settings->isLeaseEnable()
+            && false === $this->settings->isLeaseRequire()
+        ) {
+            $this->end(new ErrorFrame(
+                SetupFrame::SETUP_STREAM_ID,
+                ErrorType::UNSUPPORTED_SETUP,
+                'No lease support'
+            ));
+
+            return;
+        }
+
+        $this->reasumeEnable = $frame->reasumeEnable;
 
         $this->connectIsSetuped = true;
 
-        foreach ($this->lisseners[self::SETUPED_LISSENER_KEY] as $lissener) {
-            $lissener($this);
-        }
+        $this->setupedSubject->onNext($frame);
     }
 
     private function handleClose(): void
     {
         $this->connectIsSetuped = false;
-        foreach ($this->lisseners[self::CLOSE_LISSENER_KEY] as $lissener) {
-            $lissener($this);
+
+        $this->closeSubject->onNext(new ClosedConnection($this));
+
+        if (false === $this->reasumeEnable) {
+            $this->closeSubject->onCompleted();
         }
     }
 
@@ -111,9 +171,14 @@ abstract class RSocketConnection
             foreach ($this->decodeFrames($data) as $frame) {
                 if ($frame instanceof SetupFrame) {
                     $this->setupConnection($frame);
-
-                    return;
+                    continue;
                 }
+
+                if ($frame instanceof ErrorFrame) {
+                    $this->handleError($frame);
+                    continue;
+                }
+
                 //
                 //            if($this->connectIsSetuped === false){
                 //                //todo
@@ -131,16 +196,39 @@ abstract class RSocketConnection
                 //                }
             }
         } catch (CreateFrameOnUnsuportedVersionException) {
-            // send error
+            $this->end(new ErrorFrame(
+                SetupFrame::SETUP_STREAM_ID,
+                ErrorType::INVALID_SETUP,
+                'Version not supported'
+            ));
         }
     }
 
-    private function send(Frame $data): bool
+    private function handleError(ErrorFrame $frame): void
     {
-        if ($this->connection instanceof WebSocket) {
-            return (bool) $this->connection->send($data);
+        if (0 === $frame->streamId()) {
         }
-
-        return $this->connection->write($data);
     }
+
+    //    public function requestResponse(string $data): Observable
+    //    {
+    //        $frame = new RequestResponseFrame($this->streamId, $data);
+    //        $subject = new Subject();
+    //        $this->lisseners[$this->streamId] = $subject;
+    //        $this->send($frame);
+    //        $this->streamId += 2;
+    //
+    //        return $subject->asObservable();
+    //    }
+    //
+    //    public function fireAndForget(string $data): void
+    //    {
+    //        if ($this->connection instanceof WebSocket) {
+    //            $this->connection->send($data);
+    //        }
+    //
+    //        $this->connection->write($data);
+    // //        $frame = new RequestResponseFrame($this->streamId, $data);
+    // //        $this->send($frame);
+    //    }
 }

@@ -4,17 +4,19 @@ declare(strict_types=1);
 
 namespace App\Tests;
 
+use App\Frame\Factory\FrameFactory;
 use App\Frame\Frame;
 use App\Frame\SetupFrame;
+use App\Tests\Extensions\CallableStub;
 use App\Tests\Extensions\TCPTestClient;
-use App\Tests\Extensions\TCPTestServer;
+
 use App\Tests\Extensions\TestConnector;
 use PHPUnit\Framework\TestCase;
 
 class RSocketTestCase extends TestCase
 {
+    const TIMEOUT = 1;
     public const TCP_ADDRESS = '127.0.0.1:9091';
-    protected readonly TCPTestServer $TCPRSocketServer;
     private ?TestConnector $testConnector = null;
     protected TCPTestClient $testClient ;
 
@@ -22,24 +24,18 @@ class RSocketTestCase extends TestCase
     public function __construct()
     {
         parent::__construct();
-        $this->TCPRSocketServer = new TCPTestServer(self::TCP_ADDRESS);
-        $this->testClient = new TCPTestClient();
+        $this->testClient = new TCPTestClient(new FrameFactory());
     }
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->TCPRSocketServer->reset();
     }
 
 
     protected function tearDown(): void
     {
         parent::tearDown();
-        foreach ($this->TCPRSocketServer->getConstraints() as $value => $constraint) {
-            $this->assertThat($value, $constraint);
-        }
-        $this->TCPRSocketServer->close();
 
         foreach ($this->getTestConnector()->getConstraints() as $value => $constraint) {
             $this->assertThat($value, $constraint);
@@ -56,5 +52,15 @@ class RSocketTestCase extends TestCase
         }
 
         return $this->testConnector;
+    }
+
+    protected function expectCallableOnce()
+    {
+        $mock = $this->getMockBuilder(CallableStub::class)->getMock();
+        $mock
+            ->expects($this->once())
+            ->method('__invoke');
+
+        return $mock;
     }
 }
