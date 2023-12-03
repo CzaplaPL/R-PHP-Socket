@@ -16,8 +16,6 @@ use JetBrains\PhpStorm\Pure;
  */
 final class SetupFrame extends Frame
 {
-    public const SETUP_STREAM_ID = 0;
-
     public function __construct(
         public readonly int $keepAlive = 60000,
         public readonly int $lifetime = 300000,

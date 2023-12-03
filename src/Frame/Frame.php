@@ -6,6 +6,7 @@ namespace App\Frame;
 
 abstract class Frame
 {
+    public const SETUP_STREAM_ID = 0;
     public const MAJOR_VERSION = 1;
     public const MINOR_VERSION = 0;
 

@@ -20,4 +20,10 @@ class CreateFrameException extends Exception
     {
         return new self(sprintf('%d is wrong stream number to SetupFrame. expected 0', $streamId));
     }
+
+    #[Pure]
+    public static function wrongStreamIdToKeepAliveFrame(int $streamId): self
+    {
+        return new self(sprintf('%d is wrong stream number to KeepAliveFrame. expected 0', $streamId));
+    }
 }

@@ -73,10 +73,10 @@ final class EmailTest extends TestCase
 //
 //    }
 
-//    public function testConnectionWithDefaultSetupFrame(): void
-//    {
-//        $connectionBuilder = new ConnectionBuilder();
-//        $client = $connectionBuilder->createClient();
+    public function testConnectionWithDefaultSetupFrame(): void
+    {
+        $connectionBuilder = new ConnectionBuilder();
+        $client = $connectionBuilder->createClient();
 //
 ////        $this->expectException(RuntimeException::class);
 //
@@ -85,19 +85,20 @@ final class EmailTest extends TestCase
 //        $metaData = new DataDTO('meta data');
 //
 //
-//        $connection = await($client->connect(new ConnectionSettings(reasumeEnable: true, leaseEnable: true, reasumeToken: 'token11'), $data, $metaData));
+        $connection = await($client->connect());
+        $connection->connect(new ConnectionSettings(keepAlive: 1000,lifetime: 6000));
 //        $connection->connection->on("data", function ($data) {
 //            var_dump("tu" ,$data);
 //        });
-//        $loop = Loop::get();
+        $loop = Loop::get();
 //
 //        $loop->addTimer(10.0, function () use ($loop) {
 //            $loop->stop();
 //        });
-//        $loop->run();
+        $loop->run();
 //        $this->assertEquals(true, true);
 ////
-//    }
+    }
 
 }
 

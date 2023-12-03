@@ -10,6 +10,7 @@ use App\Core\Exception\CreateFrameOnUnsuportedVersionException;
 use App\Frame\Enums\ErrorType;
 use App\Frame\ErrorFrame;
 use App\Frame\Frame;
+use App\Frame\KeepAliveFrame;
 use App\Frame\PayloadFrame;
 use App\Frame\SetupFrame;
 
@@ -27,6 +28,7 @@ class FrameFactory implements IFrameFactory
 
         return match ($type) {
             1 => $this->createSetupType($buffer, $offset, $streamId, $data),
+            3 => $this->createKeepAliveType($buffer, $offset, $streamId, $data),
             11 => $this->createErrorType($buffer, $offset, $streamId, $data),
             default => throw CreateFrameException::unknowType($type)
         };
@@ -125,6 +127,24 @@ class FrameFactory implements IFrameFactory
             $streamId,
             ErrorType::tryFrom($errorType),
             $message
+        );
+    }
+
+    private function createKeepAliveType(ArrayBuffer $buffer, int $offset, int $streamId, string $data)
+    {
+        if (0 !== $streamId) {
+            throw CreateFrameException::wrongStreamIdToKeepAliveFrame($streamId);
+        }
+
+        $typeAndFlag = $buffer->getUInt16($offset);
+
+        $needResponse = ($typeAndFlag & 0x80) === 128;
+
+        $tmp = substr($data, $offset + 10);
+
+        return new KeepAliveFrame(
+            $needResponse,
+            substr($data, $offset + 10)
         );
     }
 }
