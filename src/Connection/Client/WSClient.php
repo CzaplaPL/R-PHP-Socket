@@ -50,7 +50,7 @@ final class WSClient implements IRSocketClient
                 onFulfilled: function ($connection) use ($resolver, $reject, $setupFrame): void {
                     try {
                         $connection->send($setupFrame->serialize());
-                        $resolver(new WSRSocketConnection(Uuid::uuid4(), $connection, $this->frameFactory,));
+                        $resolver(new WSRSocketConnection(Uuid::uuid4(), $connection, $this->frameFactory));
                     } catch (Throwable $error) {
                         $reject(ConnectionFailedException::errorOnSendSetupFrame($error));
                     }

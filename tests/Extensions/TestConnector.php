@@ -85,5 +85,12 @@ class TestConnector implements ConnectorInterface
         }
     }
 
+    public function send(string $data)
+    {
+        foreach ($this->connections as $connection) {
+            $connection->emit('data',[ $data]);
+        }
+    }
+
 
 }

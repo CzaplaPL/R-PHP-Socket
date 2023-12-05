@@ -5,16 +5,16 @@ declare(strict_types=1);
 namespace App\Frame;
 
 use App\Core\ArrayBuffer;
+use App\Core\DataDTO;
 use JetBrains\PhpStorm\Pure;
 
-class RequestResponseFrame extends Frame
+class FireAndForgetFrame extends Frame
 {
-
-
     public function __construct(
         int    $streamId,
         public readonly ?string $data = null,
-        public readonly ?string $metadata = null)
+    public readonly ?string $metadata = null
+    )
     {
         parent::__construct($streamId);
     }
@@ -38,7 +38,7 @@ class RequestResponseFrame extends Frame
 
     private function generateTypeAndFlags(): int
     {
-        $value = 4;
+        $value = 5;
         $value = $value << 2;
         $value += $this->metadata ? 1 : 0;
         $value = $value << 8;

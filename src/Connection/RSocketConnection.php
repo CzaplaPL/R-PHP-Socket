@@ -13,6 +13,7 @@ use App\Core\Exception\CreateFrameOnUnsuportedVersionException;
 use App\Frame\Enums\ErrorType;
 use App\Frame\ErrorFrame;
 use App\Frame\Factory\IFrameFactory;
+use App\Frame\FireAndForgetFrame;
 use App\Frame\Frame;
 use App\Frame\KeepAliveFrame;
 use App\Frame\RequestResponseFrame;
@@ -30,6 +31,7 @@ abstract class RSocketConnection
 {
     private readonly Subject $setupedSubject;
     private readonly Subject $closeSubject;
+    private readonly Subject $fnfSubject;
     protected bool $connectIsSetuped = false;
     protected int $timeOfLastKeepAliveMessage = 0;
     protected bool $reasumeEnable = false;
@@ -43,13 +45,15 @@ abstract class RSocketConnection
     protected ?TimerInterface $timeoutTimer = null;
 
     public function __construct(
-        public readonly UuidInterface $id,
+        public    readonly UuidInterface $id,
         protected readonly ConnectionInterface|WebSocket $connection,
         protected readonly IFrameFactory $frameFactory,
         protected readonly ServerSettings $settings = new ServerSettings(),
-    ) {
+    )
+    {
         $this->setupedSubject = new Subject();
         $this->closeSubject = new Subject();
+        $this->fnfSubject = new Subject();
         $this->nextStreamId = 1;
         $this->connection->on('data', $this->handleData(...));
         $this->connection->on('close', $this->handleClose(...));
@@ -58,6 +62,21 @@ abstract class RSocketConnection
     public function close(): void
     {
         $this->connection->close();
+    }
+
+    public function fireAndForget(string $data, string $metaData = null)
+    {
+        $this->send(new FireAndForgetFrame(
+            $this->nextStreamId,
+            $data,
+            $metaData,
+        ));
+        $this->nextStreamId += 2;
+    }
+
+    public function onFnF(): Observable
+    {
+        return $this->fnfSubject->asObservable();
     }
 
     /**
@@ -88,6 +107,7 @@ abstract class RSocketConnection
             $this->send($setupFrame);
             $this->connectIsSetuped = true;
             $this->setupKeepAlive($setupFrame);
+            $this->nextStreamId = 2;
             $this->timeOfLastKeepAliveMessage = time();
         } catch (Throwable $error) {
             throw ConnectionFailedException::errorOnSendSetupFrame($error);
@@ -207,6 +227,10 @@ abstract class RSocketConnection
                 if ($frame instanceof KeepAliveFrame) {
                     $this->handleKeepAlive($frame);
                     continue;
+                }
+
+                if ($frame instanceof FireAndForgetFrame) {
+                    $this->fnfSubject->onNext($frame);
                 }
 
                 //

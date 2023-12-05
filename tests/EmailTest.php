@@ -7,6 +7,7 @@ namespace App\Tests;
 use App\Connection\Builder\ConnectionBuilder;
 use App\Connection\Client\ConnectionSettings;
 use App\Connection\IRSocketConnection;
+use App\Connection\RSocketConnection;
 use App\Core\DataDTO;
 use App\Core\Enums\ConnectionType;
 use App\Core\Exception\CreateFrameOnUnsuportedVersionException;
@@ -84,12 +85,22 @@ final class EmailTest extends TestCase
 //        $data = new DataDTO('data');
 //        $metaData = new DataDTO('meta data');
 //
-//
+      /**
+         * @var RSocketConnection $connect
+        */
         $connection = await($client->connect());
-        $connection->connect(new ConnectionSettings(keepAlive: 1000,lifetime: 6000));
+
+
+        $connection->connect(new ConnectionSettings(keepAlive: 1000000,lifetime: 600000000));
 //        $connection->connection->on("data", function ($data) {
 //            var_dump("tu" ,$data);
 //        });
+
+
+
+            $connection->fireAndForget('witam serdecznie');
+
+
         $loop = Loop::get();
 //
 //        $loop->addTimer(10.0, function () use ($loop) {

@@ -33,7 +33,7 @@ class TCPServerTest extends RSocketTestCase
 
     public function testErrorOnDubleBindServer(): void
     {
-        $this->server  = (new ConnectionBuilder(self::TCP_ADDRESS))
+        $this->server = (new ConnectionBuilder(self::TCP_ADDRESS))
             ->createServer();
 
         $this->server->bind();
@@ -43,79 +43,79 @@ class TCPServerTest extends RSocketTestCase
 
     public function testCanBindServerAfterClose(): void
     {
-        $this->server  = (new ConnectionBuilder(self::TCP_ADDRESS))
+        $this->server = (new ConnectionBuilder(self::TCP_ADDRESS))
             ->createServer();
 
         $this->server->bind();
         $this->server->close();
         $this->server->bind();
-        await(timeout($this->testClient->connect(self::TCP_ADDRESS),self::TIMEOUT));
+        await(timeout($this->testClient->connect(self::TCP_ADDRESS), self::TIMEOUT));
         $this->assertCount(1, $this->server->getConnections());
     }
 
     public function testSuccesfullConectWithDefaultSetupFrame(): void
     {
-        $this->server  = (new ConnectionBuilder(self::TCP_ADDRESS))
+        $this->server = (new ConnectionBuilder(self::TCP_ADDRESS))
             ->createServer();
 
         $this->server->bind();
 
-        await(timeout($this->testClient->connect(self::TCP_ADDRESS),self::TIMEOUT));
+        await(timeout($this->testClient->connect(self::TCP_ADDRESS), self::TIMEOUT));
 
 
         $this->testClient->SendSetupFrame();
 
-        await(timeout(new Promise( function(callable $resolver){
-            $this->server->newConnections()->take(1)->subscribe(static function() use($resolver) {
+        await(timeout(new Promise(function (callable $resolver) {
+            $this->server->newConnections()->take(1)->subscribe(static function () use ($resolver) {
                 $resolver(true);
             });
-        }),self::TIMEOUT));
+        }), self::TIMEOUT));
 
         $this->assertCount(1, $this->server->getConnections());
-        $this->assertTrue(current( $this->server->getConnections())->isConnectSetuped());
+        $this->assertTrue(current($this->server->getConnections())->isConnectSetuped());
     }
 
     public function testSuccesfullConectWithReasumeAndDataInSetupFrame(): void
     {
-        $this->server  = (new ConnectionBuilder(self::TCP_ADDRESS))
+        $this->server = (new ConnectionBuilder(self::TCP_ADDRESS))
             ->createServer();
 
         $this->server->bind(new ServerSettings(reasumeEnable: true));
 
-        await(timeout($this->testClient->connect(self::TCP_ADDRESS),self::TIMEOUT));
+        await(timeout($this->testClient->connect(self::TCP_ADDRESS), self::TIMEOUT));
 
-        $data =  new DataDTO("data");
-        $metaData =  new DataDTO("meta-data");
-        $this->testClient->SendSetupFrame(new ConnectionSettings(reasumeEnable: true),$data,$metaData);
+        $data = new DataDTO("data");
+        $metaData = new DataDTO("meta-data");
+        $this->testClient->SendSetupFrame(new ConnectionSettings(reasumeEnable: true), $data, $metaData);
 
-        await(timeout(new Promise(function(callable $resolver) use ( $data, $metaData){
-            $this->server->newConnections()->take(1)->subscribe(function(NewConnection $newConnection) use($resolver, $data, $metaData) {
+        await(timeout(new Promise(function (callable $resolver) use ($data, $metaData) {
+            $this->server->newConnections()->take(1)->subscribe(function (NewConnection $newConnection) use ($resolver, $data, $metaData) {
                 $this->assertEquals($newConnection->frame->getMetaData(), $metaData);
                 $this->assertEquals($newConnection->frame->getData(), $data);
                 $resolver(true);
             });
-        }),self::TIMEOUT));
+        }), self::TIMEOUT));
         $this->assertCount(1, $this->server->getConnections());
-        $this->assertTrue( current($this->server->getConnections())->isConnectSetuped());
+        $this->assertTrue(current($this->server->getConnections())->isConnectSetuped());
     }
 
     public function testConectToServerThatDoNotSuportReasume(): void
     {
-        $this->server  = (new ConnectionBuilder(self::TCP_ADDRESS))
+        $this->server = (new ConnectionBuilder(self::TCP_ADDRESS))
             ->createServer();
 
         $this->server->bind();
 
-        await(timeout($this->testClient->connect(self::TCP_ADDRESS),self::TIMEOUT));
+        await(timeout($this->testClient->connect(self::TCP_ADDRESS), self::TIMEOUT));
 
-        $expectedErrorFrame = new Promise( function(callable $resolver){
-            $this->testClient->recivedMessage()->take(1)->subscribe(function(Frame $frame) use($resolver) {
+        $expectedErrorFrame = new Promise(function (callable $resolver) {
+            $this->testClient->recivedMessage()->take(1)->subscribe(function (Frame $frame) use ($resolver) {
                 $this->assertInstanceOf(ErrorFrame::class, $frame);
 
                 /**
                  * @var ErrorFrame $errorFrame
                  */
-                $errorFrame = $frame instanceof ErrorFrame ? $frame: throw new \TypeError("Expected ErrorFrame");
+                $errorFrame = $frame instanceof ErrorFrame ? $frame : throw new \TypeError("Expected ErrorFrame");
 
                 $this->assertEquals(0, $errorFrame->streamId());
                 $this->assertEquals(ErrorType::UNSUPPORTED_SETUP, $errorFrame->type());
@@ -124,61 +124,59 @@ class TCPServerTest extends RSocketTestCase
             });
         });
 
-        $expectedCloseConnection = new Promise( function(callable $resolver){
-            $this->server->closedConnections()->take(1)->subscribe(function() use($resolver) {
+        $expectedCloseConnection = new Promise(function (callable $resolver) {
+            $this->server->closedConnections()->take(1)->subscribe(function () use ($resolver) {
                 $resolver(true);
             });
         });
 
         $this->testClient->SendSetupFrame(new ConnectionSettings(reasumeEnable: true));
 
-        await(timeout($expectedErrorFrame,self::TIMEOUT));
-        await(timeout($expectedCloseConnection,self::TIMEOUT));
+        await(timeout($expectedErrorFrame, self::TIMEOUT));
+        await(timeout($expectedCloseConnection, self::TIMEOUT));
         $this->assertCount(0, $this->server->getConnections());
     }
 
     public function testSuccesfullConectWithLeaseInSetupFrame(): void
     {
-        $this->server  = (new ConnectionBuilder(self::TCP_ADDRESS))
+        $this->server = (new ConnectionBuilder(self::TCP_ADDRESS))
             ->createServer();
 
         $this->server->bind(new ServerSettings(leaseEnable: true));
 
-        await(timeout($this->testClient->connect(self::TCP_ADDRESS),self::TIMEOUT));
+        await(timeout($this->testClient->connect(self::TCP_ADDRESS), self::TIMEOUT));
 
 
         $this->testClient->SendSetupFrame(new ConnectionSettings(leaseEnable: true));
 
-        await(timeout(new Promise( function(callable $resolver){
-            $this->server->newConnections()->take(1)->subscribe(function(NewConnection $newConnection) use($resolver) {
+        await(timeout(new Promise(function (callable $resolver) {
+            $this->server->newConnections()->take(1)->subscribe(function (NewConnection $newConnection) use ($resolver) {
                 $this->assertTrue($newConnection->frame->leaseEnable);
 
                 $resolver(true);
             });
-        }),self::TIMEOUT));
+        }), self::TIMEOUT));
         $this->assertCount(1, $this->server->getConnections());
-        $this->assertTrue( current($this->server->getConnections())->isConnectSetuped());
+        $this->assertTrue(current($this->server->getConnections())->isConnectSetuped());
     }
 
     public function testConectToServerThatDoNotSuportLease(): void
     {
-        $this->server  = (new ConnectionBuilder(self::TCP_ADDRESS))
+        $this->server = (new ConnectionBuilder(self::TCP_ADDRESS))
             ->createServer();
 
         $this->server->bind();
 
-        await(timeout($this->testClient->connect(self::TCP_ADDRESS),self::TIMEOUT));
+        await(timeout($this->testClient->connect(self::TCP_ADDRESS), self::TIMEOUT));
 
-        $expectedErrorFrame = new Promise( function(callable $resolver){
-            $this->testClient->recivedMessage()->take(1)->subscribe(function(Frame $frame) use($resolver) {
+        $expectedErrorFrame = new Promise(function (callable $resolver) {
+            $this->testClient->recivedMessage()->take(1)->subscribe(function (Frame $frame) use ($resolver) {
                 $this->assertInstanceOf(ErrorFrame::class, $frame);
 
                 /**
                  * @var ErrorFrame $errorFrame
                  */
-                $errorFrame = $frame instanceof ErrorFrame ? $frame: throw new \TypeError("Expected ErrorFrame");
-
-
+                $errorFrame = $frame instanceof ErrorFrame ? $frame : throw new \TypeError("Expected ErrorFrame");
 
                 $this->assertEquals(0, $errorFrame->streamId());
                 $this->assertEquals(ErrorType::UNSUPPORTED_SETUP, $errorFrame->type());
@@ -189,28 +187,27 @@ class TCPServerTest extends RSocketTestCase
 
         $this->testClient->SendSetupFrame(new ConnectionSettings(leaseEnable: true));
 
-        await(timeout($expectedErrorFrame,self::TIMEOUT));
+        await(timeout($expectedErrorFrame, self::TIMEOUT));
         $this->assertCount(0, $this->server->getConnections());
     }
 
     public function testConectToServerWithoutLeaseWhenSerwerRequireLease(): void
     {
-        $this->server  = (new ConnectionBuilder(self::TCP_ADDRESS))
+        $this->server = (new ConnectionBuilder(self::TCP_ADDRESS))
             ->createServer();
 
         $this->server->bind(new ServerSettings(leaseRequire: true));
 
-        await(timeout($this->testClient->connect(self::TCP_ADDRESS),self::TIMEOUT));
+        await(timeout($this->testClient->connect(self::TCP_ADDRESS), self::TIMEOUT));
 
-        $expectedErrorFrame = new Promise( function(callable $resolver){
-            $this->testClient->recivedMessage()->take(1)->subscribe(function(Frame $frame) use($resolver) {
+        $expectedErrorFrame = new Promise(function (callable $resolver) {
+            $this->testClient->recivedMessage()->take(1)->subscribe(function (Frame $frame) use ($resolver) {
                 $this->assertInstanceOf(ErrorFrame::class, $frame);
 
                 /**
                  * @var ErrorFrame $errorFrame
                  */
-                $errorFrame = $frame instanceof ErrorFrame ? $frame: throw new \TypeError("Expected ErrorFrame");
-
+                $errorFrame = $frame instanceof ErrorFrame ? $frame : throw new \TypeError("Expected ErrorFrame");
 
 
                 $this->assertEquals(0, $errorFrame->streamId());
@@ -222,22 +219,22 @@ class TCPServerTest extends RSocketTestCase
 
         $this->testClient->SendSetupFrame(new ConnectionSettings());
 
-        await(timeout($expectedErrorFrame,self::TIMEOUT));
+        await(timeout($expectedErrorFrame, self::TIMEOUT));
         $this->assertCount(0, $this->server->getConnections());
     }
 
     public function testClientCloseConnectionWithoutReasume(): void
     {
-        $this->server  = (new ConnectionBuilder(self::TCP_ADDRESS))
+        $this->server = (new ConnectionBuilder(self::TCP_ADDRESS))
             ->createServer();
 
         $this->server->bind();
 
-        await(timeout($this->testClient->connect(self::TCP_ADDRESS),self::TIMEOUT));
+        await(timeout($this->testClient->connect(self::TCP_ADDRESS), self::TIMEOUT));
 
-        $expectedCloseConnection = new Promise( function(callable $resolver){
+        $expectedCloseConnection = new Promise(function (callable $resolver) {
             $this->server->closedConnections()->take(1)->subscribe(
-                function (ClosedConnection $closedConnection) use($resolver) {
+                function (ClosedConnection $closedConnection) use ($resolver) {
                     $this->assertNull($closedConnection->errorException);
                     $resolver(true);
                 }
@@ -247,22 +244,22 @@ class TCPServerTest extends RSocketTestCase
         $this->testClient->SendSetupFrame();
 
         $this->testClient->close();
-        await(timeout($expectedCloseConnection,self::TIMEOUT));
+        await(timeout($expectedCloseConnection, self::TIMEOUT));
         $this->assertCount(0, $this->server->getConnections());
     }
 
     public function testClientCloseConnectionWithReasume(): void
     {
-        $this->server  = (new ConnectionBuilder(self::TCP_ADDRESS))
+        $this->server = (new ConnectionBuilder(self::TCP_ADDRESS))
             ->createServer();
 
         $this->server->bind(new ServerSettings(reasumeEnable: true));
 
-        await(timeout($this->testClient->connect(self::TCP_ADDRESS),self::TIMEOUT));
+        await(timeout($this->testClient->connect(self::TCP_ADDRESS), self::TIMEOUT));
 
-        $expectedCloseConnection = new Promise( function(callable $resolver){
+        $expectedCloseConnection = new Promise(function (callable $resolver) {
             $this->server->closedConnections()->take(1)->subscribe(
-                function (ClosedConnection $closedConnection) use($resolver) {
+                function (ClosedConnection $closedConnection) use ($resolver) {
                     $this->assertNull($closedConnection->errorException);
                     $resolver(true);
                 }
@@ -270,43 +267,43 @@ class TCPServerTest extends RSocketTestCase
         });
 
         $this->testClient->SendSetupFrame(new ConnectionSettings(reasumeEnable: true));
-        await(timeout(new Promise(function(callable $resolver){
-            $this->server->newConnections()->take(1)->subscribe(function(NewConnection $newConnection) use($resolver) {
+        await(timeout(new Promise(function (callable $resolver) {
+            $this->server->newConnections()->take(1)->subscribe(function (NewConnection $newConnection) use ($resolver) {
                 $resolver(true);
             });
-        }),self::TIMEOUT));
+        }), self::TIMEOUT));
         $this->testClient->close();
-        await(timeout($expectedCloseConnection,self::TIMEOUT));
+        await(timeout($expectedCloseConnection, self::TIMEOUT));
         $this->assertCount(1, $this->server->getConnections());
     }
 
     public function testErrorOnDubleSendSetupFrame(): void
     {
-        $this->server  = (new ConnectionBuilder(self::TCP_ADDRESS))
+        $this->server = (new ConnectionBuilder(self::TCP_ADDRESS))
             ->createServer();
 
         $this->server->bind();
 
-        await(timeout($this->testClient->connect(self::TCP_ADDRESS),self::TIMEOUT));
+        await(timeout($this->testClient->connect(self::TCP_ADDRESS), self::TIMEOUT));
         $this->testClient->SendSetupFrame();
 
-        await(timeout(new Promise( function(callable $resolver) {
-            $this->server->newConnections()->take(1)->subscribe(static function() use($resolver) {
+        await(timeout(new Promise(function (callable $resolver) {
+            $this->server->newConnections()->take(1)->subscribe(static function () use ($resolver) {
                 $resolver(true);
             });
-        }),self::TIMEOUT));
+        }), self::TIMEOUT));
 
         $this->assertCount(1, $this->server->getConnections());
-        $this->assertTrue( current( $this->server->getConnections())->isConnectSetuped());
+        $this->assertTrue(current($this->server->getConnections())->isConnectSetuped());
 
-        $expectedErrorFrame = new Promise( function(callable $resolver){
-            $this->testClient->recivedMessage()->take(1)->subscribe(function(Frame $frame) use($resolver) {
+        $expectedErrorFrame = new Promise(function (callable $resolver) {
+            $this->testClient->recivedMessage()->take(1)->subscribe(function (Frame $frame) use ($resolver) {
                 $this->assertInstanceOf(ErrorFrame::class, $frame);
 
                 /**
                  * @var ErrorFrame $errorFrame
                  */
-                $errorFrame = $frame instanceof ErrorFrame ? $frame: throw new \TypeError("Expected ErrorFrame");
+                $errorFrame = $frame instanceof ErrorFrame ? $frame : throw new \TypeError("Expected ErrorFrame");
                 $this->assertEquals(0, $errorFrame->streamId());
                 $this->assertEquals(ErrorType::REJECTED_SETUP, $errorFrame->type());
                 $this->assertEquals("The connection is already setuped", $errorFrame->errorMesage());
@@ -315,29 +312,28 @@ class TCPServerTest extends RSocketTestCase
         });
 
         $this->testClient->SendSetupFrame();
-        await(timeout($expectedErrorFrame,self::TIMEOUT));
+        await(timeout($expectedErrorFrame, self::TIMEOUT));
         $this->assertCount(1, $this->server->getConnections());
-        $this->assertTrue( current( $this->server->getConnections())->isConnectSetuped());
+        $this->assertTrue(current($this->server->getConnections())->isConnectSetuped());
     }
 
     public function testErrorOnWrongVersionInSetupFrame(): void
     {
-        $this->server  = (new ConnectionBuilder(self::TCP_ADDRESS))
+        $this->server = (new ConnectionBuilder(self::TCP_ADDRESS))
             ->createServer();
 
         $this->server->bind();
 
-        await(timeout($this->testClient->connect(self::TCP_ADDRESS),self::TIMEOUT));
+        await(timeout($this->testClient->connect(self::TCP_ADDRESS), self::TIMEOUT));
 
-        $expectedErrorFrame = new Promise( function(callable $resolver) {
-            $this->testClient->recivedMessage()->take(1)->subscribe(function(Frame $frame) use($resolver) {
+        $expectedErrorFrame = new Promise(function (callable $resolver) {
+            $this->testClient->recivedMessage()->take(1)->subscribe(function (Frame $frame) use ($resolver) {
                 $this->assertInstanceOf(ErrorFrame::class, $frame);
 
                 /**
                  * @var ErrorFrame $errorFrame
                  */
-                $errorFrame = $frame instanceof ErrorFrame ? $frame: throw new \TypeError("Expected ErrorFrame");
-
+                $errorFrame = $frame instanceof ErrorFrame ? $frame : throw new \TypeError("Expected ErrorFrame");
 
 
                 $this->assertEquals(0, $errorFrame->streamId());
@@ -362,11 +358,11 @@ class TCPServerTest extends RSocketTestCase
 
         $this->testClient->write($setupFrame);
 
-        await(timeout($expectedErrorFrame,self::TIMEOUT));
+        await(timeout($expectedErrorFrame, self::TIMEOUT));
         $this->assertCount(0, $this->server->getConnections());
     }
 
-    protected function tearDown():void
+    protected function tearDown(): void
     {
         parent::tearDown();
         $this->server?->close();

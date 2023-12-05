@@ -9,6 +9,7 @@ use App\Core\Exception\CreateFrameException;
 use App\Core\Exception\CreateFrameOnUnsuportedVersionException;
 use App\Frame\Enums\ErrorType;
 use App\Frame\ErrorFrame;
+use App\Frame\FireAndForgetFrame;
 use App\Frame\Frame;
 use App\Frame\KeepAliveFrame;
 use App\Frame\PayloadFrame;
@@ -29,6 +30,7 @@ class FrameFactory implements IFrameFactory
         return match ($type) {
             1 => $this->createSetupType($buffer, $offset, $streamId, $data),
             3 => $this->createKeepAliveType($buffer, $offset, $streamId, $data),
+            8 => $this->createFnFType($buffer, $offset, $streamId, $data),
             11 => $this->createErrorType($buffer, $offset, $streamId, $data),
             default => throw CreateFrameException::unknowType($type)
         };
@@ -145,6 +147,29 @@ class FrameFactory implements IFrameFactory
         return new KeepAliveFrame(
             $needResponse,
             substr($data, $offset + 10)
+        );
+    }
+
+    private function createFnFType(ArrayBuffer $buffer, int $offset, int $streamId, string $data): FireAndForgetFrame
+    {
+        $typeAndFlag = $buffer->getUInt16($offset);
+        $offset += 2;
+
+        $hasMetaData = ($typeAndFlag & 0x100) === 256;
+
+        $metaData = null;
+        if ($hasMetaData) {
+            $metaDataSize = $buffer->getUInt24($offset);
+            $offset += 3;
+            $metaData = substr($data, $offset, $metaDataSize);
+            $offset += $metaDataSize;
+        }
+        $data = substr($data, $offset);
+
+        return new FireAndForgetFrame(
+            $streamId,
+            $data,
+            $metaData,
         );
     }
 }
