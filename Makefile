@@ -1,15 +1,9 @@
-phpcsfixer:
-	 php  vendor/bin/php-cs-fixer --no-interaction --allow-risky=yes --dry-run --diff fix
-phpcsfixer_fix:
-	 php  vendor/bin/php-cs-fixer --no-interaction --allow-risky=yes --ansi fix
-unitTest:
-	 php  vendor/bin/phpunit
-phpstan:
-	 php  vendor/bin/phpstan analyse src tests -l 9
-psalm:
-	 php  ./vendor/bin/psalm --no-cache
-messDetector:
-	 php vendor/bin/phpmd src text ruleset.xml --exclude *src/Core/Enums/*
-infection:
-	 php vendor/bin/infection --min-msi=90 --initial-tests-php-options="-d zend_extension=xdebug.so"
-
+build:
+	docker compose build
+composer:
+	docker compose run main composer install
+	docker compose run workers composer install
+run:
+	docker compose up
+createNetwork:
+	docker network create --gateway 172.26.0.1 --subnet 172.26.0.0/24 app-nginx-proxy

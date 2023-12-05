@@ -58,6 +58,7 @@ abstract class RSocketConnection
         $this->connection->on('close', $this->handleClose(...));
     }
 
+
     public function close(): void
     {
         $this->connection->close();
