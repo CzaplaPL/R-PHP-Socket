@@ -4,57 +4,82 @@ declare(strict_types=1);
 
 namespace App\Frame;
 
-class PayloadFrame
+use App\Core\ArrayBuffer;
+use JetBrains\PhpStorm\Pure;
+
+class PayloadFrame extends Frame
 {
-    private int $streamId;
-    private string $payload;
-    private bool $hasMetadata;
-    private bool $follows;
-    private bool $complete;
-    private bool $next;
+
 
     public function __construct(
         int $streamId,
-        string $payload,
-        bool $hasMetadata,
-        bool $follows,
-        bool $complete,
-        bool $next,
+        public readonly string $data,
+        public readonly bool $hasMetadata = false,
+        public readonly bool $follows = false,
+        public readonly bool $complete = false,
+        public readonly bool $next = true,
+        public readonly ?string $metadata = null
     ) {
-        $this->streamId = $streamId;
-        $this->payload = $payload;
-        $this->hasMetadata = $hasMetadata;
-        $this->follows = $follows;
-        $this->complete = $complete;
-        $this->next = $next;
+        parent::__construct($streamId);
     }
 
-    public function fromString(string $data): void
-    {
-    }
+
 
     public function serialize(): string
     {
-        return '';
+        $buffer = new ArrayBuffer();
+        $buffer->addUInt32($this->streamId);
+        $buffer->addUInt16($this->generateTypeAndFlags());
+        $toReturn = $buffer->toString();
+
+        if ($this->metadata) {
+            $metaDataSizeBuffer = new ArrayBuffer();
+            $metaDataSizeBuffer->addUInt24(strlen($this->metadata));
+
+            $toReturn .= sprintf('%s%s', $metaDataSizeBuffer->toString(), $this->metadata);
+        }
+
+        return sprintf('%s%s', $toReturn, $this->data ?? '');
     }
 
-    public function streamId(): int
+    private function generateTypeAndFlags(): int
     {
-        return $this->streamId;
+        $value = 10;
+        $value = $value << 2;
+        $value += $this->metadata ? 1 : 0;
+        $value = $value << 1;
+        $value += $this->follows ? 1 : 0;
+        $value = $value << 1;
+        $value += $this->complete ? 1 : 0;
+        $value = $value << 1;
+        $value += $this->next ? 1 : 0;
+
+        $value = $value << 5;
+
+        return $value;
     }
 
-    public function complete(): bool
+    #[Pure]
+    public function getMetaData(): ?string
     {
-        return $this->complete;
+        return $this->metadata;
     }
 
+    #[Pure]
+    public function getData(): string
+    {
+        return $this->data;
+    }
+
+    #[Pure]
     public function next(): bool
     {
         return $this->next;
     }
 
-    public function payload(): string
+    #[Pure]
+    public function complete(): bool
     {
-        return $this->payload;
+        return $this->complete;
     }
 }

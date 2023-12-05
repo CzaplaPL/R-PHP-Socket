@@ -10,12 +10,14 @@ use App\Core\DataDTO;
 use App\Core\Exception\ConnectionErrorException;
 use App\Core\Exception\ConnectionFailedException;
 use App\Core\Exception\CreateFrameOnUnsuportedVersionException;
+use App\Core\PayloadDTO;
 use App\Frame\Enums\ErrorType;
 use App\Frame\ErrorFrame;
 use App\Frame\Factory\IFrameFactory;
 use App\Frame\FireAndForgetFrame;
 use App\Frame\Frame;
 use App\Frame\KeepAliveFrame;
+use App\Frame\PayloadFrame;
 use App\Frame\RequestResponseFrame;
 use App\Frame\SetupFrame;
 use Ramsey\Uuid\UuidInterface;
@@ -77,6 +79,20 @@ abstract class RSocketConnection
     public function onFnF(): Observable
     {
         return $this->fnfSubject->asObservable();
+    }
+
+    public function requestResponse(string $data, string $metaData = null): Observable
+    {
+        $subject = new Subject();
+        $this->lisseners[$this->nextStreamId] = $subject;
+
+        $this->send(new RequestResponseFrame(
+            $this->nextStreamId,
+            $data,
+            $metaData,
+        ));
+        $this->nextStreamId += 2;
+        return $subject->asObservable();
     }
 
     /**
@@ -233,23 +249,23 @@ abstract class RSocketConnection
                     $this->fnfSubject->onNext($frame);
                 }
 
-                //
-                //            if($this->connectIsSetuped === false){
-                //                //todo
-                //            }
+                if ($frame instanceof FireAndForgetFrame) {
+                    $this->fnfSubject->onNext($frame);
+                }
 
-                /** @var Subject|null $subject */
-                $subject = $this->lisseners[$frame->streamId()] ?? null;
-                //                if ($subject) {
-                //                    if ($frame->next()) {
-                //                        $subject->onNext($frame->payload());
-                //                    }
-                //                    if ($frame->complete()) {
-                //                        $subject->onCompleted();
-                //                    }
-                //                }
+                if ($frame instanceof PayloadFrame) {
+                    $subject = $this->lisseners[$frame->streamId()] ?? null;
+                    if ($subject) {
+                        if ($frame->next()) {
+                            $subject->onNext(new PayloadDTO($frame->getData(),$frame->getMetaData()));
+                        }
+                        if ($frame->complete()) {
+                            $subject->onCompleted();
+                        }
+                    }
+                }
             }
-        } catch (CreateFrameOnUnsuportedVersionException) {
+        } catch (CreateFrameOnUnsuportedVersionException $e) {
             $this->end(new ErrorFrame(
                 Frame::SETUP_STREAM_ID,
                 ErrorType::INVALID_SETUP,

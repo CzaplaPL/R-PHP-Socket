@@ -31,6 +31,7 @@ class FrameFactory implements IFrameFactory
             1 => $this->createSetupType($buffer, $offset, $streamId, $data),
             3 => $this->createKeepAliveType($buffer, $offset, $streamId, $data),
             5 => $this->createFnFType($buffer, $offset, $streamId, $data),
+            10 => $this->createPayloadType($buffer, $offset, $streamId, $data),
             11 => $this->createErrorType($buffer, $offset, $streamId, $data),
             default => throw CreateFrameException::unknowType($type)
         };
@@ -46,7 +47,16 @@ class FrameFactory implements IFrameFactory
         $complete = ($typeAndFlag & 0x40) === 64;
         $next = ($typeAndFlag & 0x20) === 32;
 
-        return new PayloadFrame($streamId, substr($data, $offset), $hasMetaData, $follows, $complete, $next);
+        $metaData = null;
+        if ($hasMetaData) {
+            $metaDataSize = $buffer->getUInt24($offset);
+            $offset += 3;
+            $metaData = substr($data, $offset, $metaDataSize);
+            $offset += $metaDataSize;
+        }
+        $data = substr($data, $offset);
+
+        return new PayloadFrame($streamId, $data, $hasMetaData, $follows, $complete, $next, $metaData);
     }
 
     private function createSetupType(ArrayBuffer $buffer, int $offset, int $streamId, string $data): SetupFrame

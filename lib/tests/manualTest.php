@@ -36,31 +36,31 @@ final class manualTest extends TestCase
 {
     const TIMEOUT = 2;
 
-    public function testSendFnFFrame(): void
-    {
-        $connectionBuilder = new ConnectionBuilder();
-        $client = $connectionBuilder->createClient();
-
-        /**
-         * @var RSocketConnection $connect
-         */
-        $connection = await($client->connect());
-        $connection->connect(new ConnectionSettings());
-
-        $connection->fireAndForget('witam serdecznie');
-    }
-
-    public function testReciveFnFFrame(): void
-    {
-        $connectionBuilder = new ConnectionBuilder();
-        $server = $connectionBuilder->createServer();
-        $server->bind();
-        $server->newConnections()->subscribe(function (NewConnection $newConnection) {
-           $newConnection->connection->onFnF()->subscribe(function (FireAndForgetFrame $frame) {
-               var_dump($frame);
-           });
-        });
-        Loop::run();
-    }
+//    public function testSendFnFFrame(): void
+//    {
+//        $connectionBuilder = new ConnectionBuilder();
+//        $client = $connectionBuilder->createClient();
+//
+//        /**
+//         * @var RSocketConnection $connect
+//         */
+//        $connection = await($client->connect());
+//        $connection->connect(new ConnectionSettings());
+//
+//        $connection->fireAndForget('witam serdecznie');
+//    }
+//
+//    public function testReciveFnFFrame(): void
+//    {
+//        $connectionBuilder = new ConnectionBuilder();
+//        $server = $connectionBuilder->createServer();
+//        $server->bind();
+//        $server->newConnections()->subscribe(function (NewConnection $newConnection) {
+//           $newConnection->connection->onFnF()->subscribe(function (FireAndForgetFrame $frame) {
+//               var_dump($frame);
+//           });
+//        });
+//        Loop::run();
+//    }
 }
 

@@ -24,14 +24,6 @@ final class ExpectedSendFrame extends Constraint
     public function evaluate($other, string $description = '', bool $returnResult = false): ?bool
     {
 
-        for ($i = 0; $i < strlen($other); $i++) {
-            if($this->sendedFrame[1][$i]!= $other[$i]){
-                var_dump($this->sendedFrame[1][$i], $other[$i], $i);
-            }
-        }
-
-
-
         if (in_array($other, $this->sendedFrame, true)) {
             return $returnResult ? true : null;
         }

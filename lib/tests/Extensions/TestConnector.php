@@ -9,6 +9,8 @@ use PHPUnit\Framework\Constraint\Constraint;
 use React\Promise\Promise;
 use React\Promise\PromiseInterface;
 use React\Socket\ConnectorInterface;
+use Rx\Observable;
+use Rx\Subject\Subject;
 
 
 class TestConnector implements ConnectorInterface
@@ -25,8 +27,11 @@ class TestConnector implements ConnectorInterface
      */
     private array $expectedSendsData = [];
 
+    private Subject $sendedDataSubject;
+
     public function __construct(private ?string $url = null)
     {
+        $this->sendedDataSubject = new Subject();
     }
 
     public function connect($uri): PromiseInterface
@@ -91,6 +96,4 @@ class TestConnector implements ConnectorInterface
             $connection->emit('data',[ $data]);
         }
     }
-
-
 }

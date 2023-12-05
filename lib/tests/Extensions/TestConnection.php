@@ -5,6 +5,8 @@ namespace App\Tests\Extensions;
 use React\EventLoop\Loop;
 use React\Socket\ConnectionInterface;
 use React\Stream\WritableStreamInterface;
+use Rx\Observable;
+use Rx\Subject\Subject;
 
 class TestConnection implements ConnectionInterface
 {
@@ -103,7 +105,7 @@ class TestConnection implements ConnectionInterface
 
     public function close(): void
     {
-        throw new \Exception("do implementacji");
+        $this->emit('close');
     }
 
     public function isWritable(): bool

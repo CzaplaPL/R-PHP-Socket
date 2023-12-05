@@ -15,6 +15,7 @@ use App\Frame\SetupFrame;
 use App\Tests\Extensions\TestConnector;
 use App\Tests\RSocketTestCase;
 use PHPUnit\Framework\TestCase;
+use React\EventLoop\Loop;
 use function React\Async\await;
 use function React\Promise\Timer\timeout;
 
@@ -53,6 +54,8 @@ class TCPClientConnectTest extends RSocketTestCase
         $connection = await(timeout($client->connect(),self::TIMEOUT));
 
         $connection->connect();
+        $connection->close();
+
     }
 
     public function testSendConfigureSetupFrameOnConnect(): void
@@ -110,9 +113,7 @@ class TCPClientConnectTest extends RSocketTestCase
 
         $this->expectException(ConnectionFailedException::class);
 
-        /**
-         * @var RSocketConnection $connection
-         */
+
         $connection = await(timeout($client->connect(),self::TIMEOUT));
 
         $connection->connect();

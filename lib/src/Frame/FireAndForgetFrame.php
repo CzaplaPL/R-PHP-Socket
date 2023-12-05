@@ -49,7 +49,7 @@ class FireAndForgetFrame extends Frame
     #[Pure]
     public function getMetaData(): string
     {
-        return new $this->metadata;
+        return  $this->metadata;
     }
 
     #[Pure]
