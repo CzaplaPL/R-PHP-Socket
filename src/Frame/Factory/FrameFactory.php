@@ -30,7 +30,7 @@ class FrameFactory implements IFrameFactory
         return match ($type) {
             1 => $this->createSetupType($buffer, $offset, $streamId, $data),
             3 => $this->createKeepAliveType($buffer, $offset, $streamId, $data),
-            8 => $this->createFnFType($buffer, $offset, $streamId, $data),
+            5 => $this->createFnFType($buffer, $offset, $streamId, $data),
             11 => $this->createErrorType($buffer, $offset, $streamId, $data),
             default => throw CreateFrameException::unknowType($type)
         };

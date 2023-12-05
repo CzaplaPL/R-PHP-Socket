@@ -39,7 +39,6 @@ abstract class RSocketConnection
      * @var array<int,Subject>
      */
     protected array $lisseners = [];
-    // todo VO
     protected int $nextStreamId;
     protected ?TimerInterface $sendKeepAliveTimer = null;
     protected ?TimerInterface $timeoutTimer = null;
