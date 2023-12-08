@@ -7,10 +7,11 @@ namespace App\Frame;
 use App\Core\ArrayBuffer;
 use JetBrains\PhpStorm\Pure;
 
-class FireAndForgetFrame extends Frame
+class RequestStreamFrame extends Frame
 {
     public function __construct(
         int $streamId,
+        public readonly int $requestN,
         public readonly ?string $data = null,
         public readonly ?string $metadata = null
     ) {
@@ -22,6 +23,7 @@ class FireAndForgetFrame extends Frame
         $buffer = new ArrayBuffer();
         $buffer->addUInt32($this->streamId);
         $buffer->addUInt16($this->generateTypeAndFlags());
+        $buffer->addUInt32($this->requestN);
         $toReturn = $buffer->toString();
 
         if ($this->metadata) {
@@ -36,7 +38,7 @@ class FireAndForgetFrame extends Frame
 
     private function generateTypeAndFlags(): int
     {
-        $value = 5;
+        $value = 6;
         $value = $value << 2;
         $value += $this->metadata ? 1 : 0;
         $value = $value << 8;
@@ -54,5 +56,11 @@ class FireAndForgetFrame extends Frame
     public function getData(): string
     {
         return $this->data;
+    }
+
+    #[Pure]
+    public function getRequestN(): int
+    {
+        return $this->requestN;
     }
 }

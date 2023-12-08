@@ -47,6 +47,7 @@ class TCPRSocketConnection extends RSocketConnection
         $value = $frame->serialize();
         $sizeBuffer = new ArrayBuffer();
         $sizeBuffer->addUInt24(strlen($value));
+
         return $this->connection->write($sizeBuffer->toString().$value);
     }
 

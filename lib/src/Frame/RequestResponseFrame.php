@@ -9,13 +9,11 @@ use JetBrains\PhpStorm\Pure;
 
 class RequestResponseFrame extends Frame
 {
-
-
     public function __construct(
-        int    $streamId,
+        int $streamId,
         public readonly ?string $data = null,
-        public readonly ?string $metadata = null)
-    {
+        public readonly ?string $metadata = null
+    ) {
         parent::__construct($streamId);
     }
 
@@ -49,7 +47,7 @@ class RequestResponseFrame extends Frame
     #[Pure]
     public function getMetaData(): string
     {
-        return  $this->metadata;
+        return $this->metadata;
     }
 
     #[Pure]

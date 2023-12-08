@@ -58,6 +58,7 @@ class FNFTest extends RSocketTestCase
         $connection->connect();
 
         $connection->fireAndForget($data, $metaData);
+        $connection->close();
     }
 
 
@@ -75,7 +76,7 @@ class FNFTest extends RSocketTestCase
         $connection = await(timeout($client->connect(), self::TIMEOUT));
         $connection->connect();
         $reciveFNF = new Promise(function (callable $resolve) use ($connection) {
-            $connection->onFnF()->take(1)->subscribe(function (FireAndForgetFrame $frame) use ($resolve) {
+            $connection->onRecivedRequest()->take(1)->subscribe(function (FireAndForgetFrame $frame) use ($resolve) {
                 $this->assertEquals('data', $frame->getData());
                 $resolve(true);
             });
@@ -93,5 +94,7 @@ class FNFTest extends RSocketTestCase
 
         $testConnector->send($sizeBuffer->toString() . $value);
         await(timeout($reciveFNF, self::TIMEOUT));
+
+        $connection->close();
     }
 }

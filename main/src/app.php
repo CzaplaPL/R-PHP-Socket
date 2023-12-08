@@ -22,7 +22,7 @@ $connection = await($client->connect());
 $connection->connect(new ConnectionSettings());
 
 
-$connection->onFnF()->subscribe(function (FireAndForgetFrame $frame )use(&$workers) {
+$connection->onRecivedRequest()->subscribe(function (FireAndForgetFrame $frame )use(&$workers) {
    $workers[] = json_decode($frame->getData(),true);
 
 });

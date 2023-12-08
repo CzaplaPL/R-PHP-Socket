@@ -13,6 +13,9 @@ use App\Frame\FireAndForgetFrame;
 use App\Frame\Frame;
 use App\Frame\KeepAliveFrame;
 use App\Frame\PayloadFrame;
+use App\Frame\RequestNFrame;
+use App\Frame\RequestResponseFrame;
+use App\Frame\RequestStreamFrame;
 use App\Frame\SetupFrame;
 
 class FrameFactory implements IFrameFactory
@@ -30,7 +33,10 @@ class FrameFactory implements IFrameFactory
         return match ($type) {
             1 => $this->createSetupType($buffer, $offset, $streamId, $data),
             3 => $this->createKeepAliveType($buffer, $offset, $streamId, $data),
+            4 => $this->createRequestResponseType($buffer, $offset, $streamId, $data),
             5 => $this->createFnFType($buffer, $offset, $streamId, $data),
+            6 => $this->createRequestStreamType($buffer, $offset, $streamId, $data),
+            8 => $this->createRequestNType($buffer, $offset, $streamId, $data),
             10 => $this->createPayloadType($buffer, $offset, $streamId, $data),
             11 => $this->createErrorType($buffer, $offset, $streamId, $data),
             default => throw CreateFrameException::unknowType($type)
@@ -56,7 +62,7 @@ class FrameFactory implements IFrameFactory
         }
         $data = substr($data, $offset);
 
-        return new PayloadFrame($streamId, $data, $hasMetaData, $follows, $complete, $next, $metaData);
+        return new PayloadFrame($streamId, $data, $follows, $complete, $next, $metaData);
     }
 
     private function createSetupType(ArrayBuffer $buffer, int $offset, int $streamId, string $data): SetupFrame
@@ -180,6 +186,65 @@ class FrameFactory implements IFrameFactory
             $streamId,
             $data,
             $metaData,
+        );
+    }
+
+    private function createRequestResponseType(ArrayBuffer $buffer, int $offset, int $streamId, string $data): RequestResponseFrame
+    {
+        $typeAndFlag = $buffer->getUInt16($offset);
+        $offset += 2;
+
+        $hasMetaData = ($typeAndFlag & 0x100) === 256;
+
+        $metaData = null;
+        if ($hasMetaData) {
+            $metaDataSize = $buffer->getUInt24($offset);
+            $offset += 3;
+            $metaData = substr($data, $offset, $metaDataSize);
+            $offset += $metaDataSize;
+        }
+        $data = substr($data, $offset);
+
+        return new RequestResponseFrame(
+            $streamId,
+            $data,
+            $metaData,
+        );
+    }
+
+    private function createRequestStreamType(ArrayBuffer $buffer, int $offset, int $streamId, string $data): RequestStreamFrame
+    {
+        $typeAndFlag = $buffer->getUInt16($offset);
+        $offset += 2;
+
+        $hasMetaData = ($typeAndFlag & 0x100) === 256;
+        $requestN = $buffer->getUInt32($offset);
+        $offset += 4;
+        $metaData = null;
+        if ($hasMetaData) {
+            $metaDataSize = $buffer->getUInt24($offset);
+            $offset += 3;
+            $metaData = substr($data, $offset, $metaDataSize);
+            $offset += $metaDataSize;
+        }
+        $data = substr($data, $offset);
+
+        return new RequestStreamFrame(
+            $streamId,
+            $requestN,
+            $data,
+            $metaData,
+        );
+    }
+
+    private function createRequestNType(ArrayBuffer $buffer, int $offset, int $streamId, string $data): RequestNFrame
+    {
+        $offset += 2;
+        $requestN = $buffer->getUInt32($offset);
+
+        return new RequestNFrame(
+            $streamId,
+            $requestN,
         );
     }
 }

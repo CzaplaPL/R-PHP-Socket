@@ -98,7 +98,7 @@ class TCPClientConnectTest extends RSocketTestCase
         $connection = await(timeout($client->connect(),self::TIMEOUT));
 
         $connection->connect( $settings, $data, $metaData);
-
+        $connection->close();
 
     }
 

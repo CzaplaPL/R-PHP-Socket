@@ -1,14 +1,15 @@
 <?php
 
+use App\Connection\Builder\ConnectionBuilder;
 use Generator\WorkerGenerator;
+use React\EventLoop\Loop;
 
 require_once __DIR__.'/../vendor/autoload.php';
 require_once __DIR__.'/Generator/WorkerGenerator.php';
 
 echo 'elo app worker';
-echo \App\Frame\Frame::MAJOR_VERSION;
-$server = (new \App\Connection\Builder\ConnectionBuilder())->setAddress('172.26.0.2:9091')->createServer();
 
+$server = (new ConnectionBuilder())->setAddress('172.26.0.2:9091')->createServer();
 $server->bind();
 
 \React\EventLoop\Loop::get()->addPeriodicTimer(1, function () use ($server){
@@ -19,10 +20,8 @@ $server->bind();
         }
     }
 });
-  \React\EventLoop\Loop::run();
 
-  $server->closedConnections()->subscribe(function () {
-     \React\EventLoop\Loop::stop();
-  });
+Loop::run();
+
 echo 'koniec app worker';
 

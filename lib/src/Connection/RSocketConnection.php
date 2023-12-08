@@ -18,7 +18,9 @@ use App\Frame\FireAndForgetFrame;
 use App\Frame\Frame;
 use App\Frame\KeepAliveFrame;
 use App\Frame\PayloadFrame;
+use App\Frame\RequestNFrame;
 use App\Frame\RequestResponseFrame;
+use App\Frame\RequestStreamFrame;
 use App\Frame\SetupFrame;
 use Ramsey\Uuid\UuidInterface;
 use Ratchet\Client\WebSocket;
@@ -33,7 +35,16 @@ abstract class RSocketConnection
 {
     private readonly Subject $setupedSubject;
     private readonly Subject $closeSubject;
-    private readonly Subject $fnfSubject;
+    private readonly Subject $recivedRequestSubject;
+    /**
+     * @var array<int,int>
+     */
+    private array $requestNLimit = [];
+
+    /**
+     * @var Frame[]
+     */
+    private array $frameToSend = [];
     protected bool $connectIsSetuped = false;
     protected int $timeOfLastKeepAliveMessage = 0;
     protected bool $reasumeEnable = false;
@@ -41,32 +52,35 @@ abstract class RSocketConnection
      * @var array<int,Subject>
      */
     protected array $lisseners = [];
+
+    /**
+     * @var array<int,Subject>
+     */
+    protected array $requestNLisseners = [];
     protected int $nextStreamId;
     protected ?TimerInterface $sendKeepAliveTimer = null;
     protected ?TimerInterface $timeoutTimer = null;
 
     public function __construct(
-        public    readonly UuidInterface $id,
+        public readonly UuidInterface $id,
         protected readonly ConnectionInterface|WebSocket $connection,
         protected readonly IFrameFactory $frameFactory,
         protected readonly ServerSettings $settings = new ServerSettings(),
-    )
-    {
+    ) {
         $this->setupedSubject = new Subject();
         $this->closeSubject = new Subject();
-        $this->fnfSubject = new Subject();
+        $this->recivedRequestSubject = new Subject();
         $this->nextStreamId = 1;
         $this->connection->on('data', $this->handleData(...));
         $this->connection->on('close', $this->handleClose(...));
     }
-
 
     public function close(): void
     {
         $this->connection->close();
     }
 
-    public function fireAndForget(string $data, string $metaData = null)
+    public function fireAndForget(string $data, string $metaData = null): void
     {
         $this->send(new FireAndForgetFrame(
             $this->nextStreamId,
@@ -76,9 +90,9 @@ abstract class RSocketConnection
         $this->nextStreamId += 2;
     }
 
-    public function onFnF(): Observable
+    public function onRecivedRequest(): Observable
     {
-        return $this->fnfSubject->asObservable();
+        return $this->recivedRequestSubject->asObservable();
     }
 
     public function requestResponse(string $data, string $metaData = null): Observable
@@ -92,17 +106,30 @@ abstract class RSocketConnection
             $metaData,
         ));
         $this->nextStreamId += 2;
+
         return $subject->asObservable();
     }
 
-    /**
-     * @return iterable<Frame>
-     */
-    abstract protected function decodeFrames(string $data): iterable;
+    public function requestStream(int $requestN, string $data, string $metaData = null): Stream
+    {
+        $subject = new Subject();
+        $requestNSubject = new Subject();
+        $this->lisseners[$this->nextStreamId] = $subject;
+        $this->requestNLimit[$this->nextStreamId] = $requestNSubject;
 
-    abstract protected function send(Frame $frame): bool;
+        $this->send(new RequestStreamFrame(
+            $this->nextStreamId,
+            $requestN,
+            $data,
+            $metaData,
+        ));
+        $this->nextStreamId += 2;
 
-    abstract protected function end(Frame $frame): void;
+        return new Stream(
+            $subject->asObservable(),
+            $requestNSubject->asObservable(),
+        );
+    }
 
     public function connect(ConnectionSettings $settings = new ConnectionSettings(), DataDTO $data = null, DataDTO $metaData = null): void
     {
@@ -149,6 +176,38 @@ abstract class RSocketConnection
     {
         return $this->reasumeEnable;
     }
+
+    public function sendResponse(int $streamId, string $data, string $metaData = null, bool $complete = false): void
+    {
+        $frame = new PayloadFrame(
+            $streamId,
+            $data,
+            false,
+            $complete,
+            true,
+            $metaData
+        );
+
+        if ($this->canSend($streamId)) {
+            if (isset($this->requestNLimit[$streamId])) {
+                --$this->requestNLimit[$streamId];
+            }
+            $this->send($frame);
+
+            return;
+        }
+
+        $this->frameToSend[] = $frame;
+    }
+
+    /**
+     * @return iterable<Frame>
+     */
+    abstract protected function decodeFrames(string $data): iterable;
+
+    abstract protected function send(Frame $frame): bool;
+
+    abstract protected function end(Frame $frame): void;
 
     private function setupConnection(SetupFrame $frame): void
     {
@@ -245,21 +304,32 @@ abstract class RSocketConnection
                     continue;
                 }
 
-                if ($frame instanceof FireAndForgetFrame) {
-                    $this->fnfSubject->onNext($frame);
+                if ($frame instanceof RequestNFrame) {
+                    $this->handleRequestN($frame);
+                    continue;
                 }
 
-                if ($frame instanceof FireAndForgetFrame) {
-                    $this->fnfSubject->onNext($frame);
+                if (
+                    $frame instanceof FireAndForgetFrame
+                    || $frame instanceof RequestResponseFrame
+                    || $frame instanceof RequestStreamFrame
+                ) {
+                    if ($frame instanceof RequestStreamFrame) {
+                        $this->requestNLimit[$frame->streamId()] = $frame->getRequestN();
+                    }
+                    $this->recivedRequestSubject->onNext($frame);
                 }
 
                 if ($frame instanceof PayloadFrame) {
                     $subject = $this->lisseners[$frame->streamId()] ?? null;
                     if ($subject) {
                         if ($frame->next()) {
-                            $subject->onNext(new PayloadDTO($frame->getData(),$frame->getMetaData()));
+                            $subject->onNext(new PayloadDTO($frame->getData(), $frame->getMetaData()));
                         }
                         if ($frame->complete()) {
+                            if (isset($this->requestNLimit[$frame->streamId()])) {
+                                unset($this->requestNLimit[$frame->streamId()]);
+                            }
                             $subject->onCompleted();
                         }
                     }
@@ -272,6 +342,15 @@ abstract class RSocketConnection
                 'Version not supported'
             ));
         }
+    }
+
+    private function canSend($streamId): bool
+    {
+        if (isset($this->requestNLimit[$streamId])) {
+            return $this->requestNLimit[$streamId] > 0;
+        }
+
+        return true;
     }
 
     private function handleError(ErrorFrame $frame): void
@@ -294,27 +373,6 @@ abstract class RSocketConnection
         throw new ConnectionErrorException($frame->errorMesage(), $frame);
     }
 
-    //    public function requestResponse(string $data): Observable
-    //    {
-    //        $frame = new RequestResponseFrame($this->streamId, $data);
-    //        $subject = new Subject();
-    //        $this->lisseners[$this->streamId] = $subject;
-    //        $this->send($frame);
-    //        $this->streamId += 2;
-    //
-    //        return $subject->asObservable();
-    //    }
-    //
-    //    public function fireAndForget(string $data): void
-    //    {
-    //        if ($this->connection instanceof WebSocket) {
-    //            $this->connection->send($data);
-    //        }
-    //
-    //        $this->connection->write($data);
-    // //        $frame = new RequestResponseFrame($this->streamId, $data);
-    // //        $this->send($frame);
-    //    }
     private function handleKeepAlive(KeepAliveFrame $frame): void
     {
         $this->timeOfLastKeepAliveMessage = time();
@@ -335,5 +393,35 @@ abstract class RSocketConnection
                 $this->connection->close();
             }
         });
+    }
+
+    private function handleRequestN(RequestNFrame $frame): void
+    {
+        if (!isset($this->requestNLimit[$frame->streamId()])) {
+            $this->requestNLimit[$frame->streamId()] = 0;
+        }
+
+        $this->requestNLimit[$frame->streamId()] += $frame->requestN;
+
+        if (!$this->canSend($frame->streamId())) {
+            return;
+        }
+
+        $keyToUnsset = [];
+        foreach ($this->frameToSend as $key => $frameToSend) {
+            if ($frameToSend->streamId() !== $frame->streamId()) {
+                continue;
+            }
+
+            if (!$this->canSend($frame->streamId())) {
+                break;
+            }
+            $this->send($frameToSend);
+            $keyToUnsset[] = $key;
+        }
+
+        foreach ($keyToUnsset as $key) {
+            unset($this->frameToSend[$key]);
+        }
     }
 }

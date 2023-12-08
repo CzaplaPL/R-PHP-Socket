@@ -9,12 +9,9 @@ use JetBrains\PhpStorm\Pure;
 
 class PayloadFrame extends Frame
 {
-
-
     public function __construct(
         int $streamId,
         public readonly string $data,
-        public readonly bool $hasMetadata = false,
         public readonly bool $follows = false,
         public readonly bool $complete = false,
         public readonly bool $next = true,
@@ -22,8 +19,6 @@ class PayloadFrame extends Frame
     ) {
         parent::__construct($streamId);
     }
-
-
 
     public function serialize(): string
     {

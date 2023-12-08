@@ -62,4 +62,53 @@ class RequestResponseTest extends RSocketTestCase
 
         $connection->close();
     }
+
+    public function testReciveRequestResponse(): void
+    {
+        $testConnector = $this->getTestConnector();
+
+        $client = (new ConnectionBuilder())
+            ->setConnector($testConnector)
+            ->createClient();
+
+        /**
+         * @var RSocketConnection $connection
+         */
+        $connection = await(timeout($client->connect(), self::TIMEOUT));
+        $connection->connect();
+
+        $frame = new PayloadFrame(
+            streamId: 2,
+            data: 'response',
+            complete: true
+        );
+
+        $value = $frame->serialize();
+        $sizeBuffer = new ArrayBuffer();
+        $sizeBuffer->addUInt24(strlen($value));
+        $testConnector->expectedSendData($sizeBuffer->toString() . $value);
+
+
+        $reciveRequestResponse = new Promise(function (callable $resolve) use ($connection) {
+            $connection->onRecivedRequest()->take(1)->subscribe(function (RequestResponseFrame $frame) use ($resolve, $connection) {
+                $this->assertEquals('data', $frame->getData());
+                $connection->sendResponse(streamId: $frame->streamId(),data: 'response',complete: true);
+                $resolve(true);
+            });
+        });
+
+        $frame = new RequestResponseFrame(
+            streamId: 2,
+            data: 'data'
+        );
+
+        $value = $frame->serialize();
+        $sizeBuffer = new ArrayBuffer();
+        $sizeBuffer->addUInt24(strlen($value));
+
+
+        $testConnector->send($sizeBuffer->toString() . $value);
+        await(timeout($reciveRequestResponse, self::TIMEOUT));
+        $connection->close();
+    }
 }
