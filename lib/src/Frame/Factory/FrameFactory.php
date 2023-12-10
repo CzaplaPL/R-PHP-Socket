@@ -7,12 +7,14 @@ namespace App\Frame\Factory;
 use App\Core\ArrayBuffer;
 use App\Core\Exception\CreateFrameException;
 use App\Core\Exception\CreateFrameOnUnsuportedVersionException;
+use App\Frame\CancelFrame;
 use App\Frame\Enums\ErrorType;
 use App\Frame\ErrorFrame;
 use App\Frame\FireAndForgetFrame;
 use App\Frame\Frame;
 use App\Frame\KeepAliveFrame;
 use App\Frame\PayloadFrame;
+use App\Frame\RequestChannelFrame;
 use App\Frame\RequestNFrame;
 use App\Frame\RequestResponseFrame;
 use App\Frame\RequestStreamFrame;
@@ -36,7 +38,9 @@ class FrameFactory implements IFrameFactory
             4 => $this->createRequestResponseType($buffer, $offset, $streamId, $data),
             5 => $this->createFnFType($buffer, $offset, $streamId, $data),
             6 => $this->createRequestStreamType($buffer, $offset, $streamId, $data),
+            7 => $this->createRequestChannelType($buffer, $offset, $streamId, $data),
             8 => $this->createRequestNType($buffer, $offset, $streamId, $data),
+            9 => $this->createCancelType($buffer, $offset, $streamId, $data),
             10 => $this->createPayloadType($buffer, $offset, $streamId, $data),
             11 => $this->createErrorType($buffer, $offset, $streamId, $data),
             default => throw CreateFrameException::unknowType($type)
@@ -245,6 +249,39 @@ class FrameFactory implements IFrameFactory
         return new RequestNFrame(
             $streamId,
             $requestN,
+        );
+    }
+
+    private function createRequestChannelType(ArrayBuffer $buffer, int $offset, int $streamId, string $data): RequestChannelFrame
+    {
+        $typeAndFlag = $buffer->getUInt16($offset);
+        $offset += 2;
+
+        $hasMetaData = ($typeAndFlag & 0x100) === 256;
+        $requestN = $buffer->getUInt32($offset);
+        $offset += 4;
+        $metaData = null;
+        if ($hasMetaData) {
+            $metaDataSize = $buffer->getUInt24($offset);
+            $offset += 3;
+            $metaData = substr($data, $offset, $metaDataSize);
+            $offset += $metaDataSize;
+        }
+        $data = substr($data, $offset);
+
+        return new RequestChannelFrame(
+            $streamId,
+            $requestN,
+            $data,
+            $metaData,
+        );
+    }
+
+    private function createCancelType(ArrayBuffer $buffer, int $offset, int $streamId, string $data): CancelFrame
+    {
+
+        return new CancelFrame(
+            $streamId,
         );
     }
 }

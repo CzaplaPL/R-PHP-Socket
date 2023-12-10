@@ -11,6 +11,7 @@ use App\Core\Exception\ConnectionErrorException;
 use App\Core\Exception\ConnectionFailedException;
 use App\Core\Exception\CreateFrameOnUnsuportedVersionException;
 use App\Core\PayloadDTO;
+use App\Frame\CancelFrame;
 use App\Frame\Enums\ErrorType;
 use App\Frame\ErrorFrame;
 use App\Frame\Factory\IFrameFactory;
@@ -18,6 +19,7 @@ use App\Frame\FireAndForgetFrame;
 use App\Frame\Frame;
 use App\Frame\KeepAliveFrame;
 use App\Frame\PayloadFrame;
+use App\Frame\RequestChannelFrame;
 use App\Frame\RequestNFrame;
 use App\Frame\RequestResponseFrame;
 use App\Frame\RequestStreamFrame;
@@ -53,10 +55,6 @@ abstract class RSocketConnection
      */
     protected array $lisseners = [];
 
-    /**
-     * @var array<int,Subject>
-     */
-    protected array $requestNLisseners = [];
     protected int $nextStreamId;
     protected ?TimerInterface $sendKeepAliveTimer = null;
     protected ?TimerInterface $timeoutTimer = null;
@@ -110,12 +108,10 @@ abstract class RSocketConnection
         return $subject->asObservable();
     }
 
-    public function requestStream(int $requestN, string $data, string $metaData = null): Stream
+    public function requestStream(int $requestN, string $data, string $metaData = null): Observable
     {
         $subject = new Subject();
-        $requestNSubject = new Subject();
         $this->lisseners[$this->nextStreamId] = $subject;
-        $this->requestNLimit[$this->nextStreamId] = $requestNSubject;
 
         $this->send(new RequestStreamFrame(
             $this->nextStreamId,
@@ -125,10 +121,44 @@ abstract class RSocketConnection
         ));
         $this->nextStreamId += 2;
 
-        return new Stream(
-            $subject->asObservable(),
-            $requestNSubject->asObservable(),
-        );
+        return $subject->asObservable();
+
+    }
+
+    public function requestChannel(int $requestN, string $data, string $metaData = null): Observable
+    {
+        $subject = new Subject();
+        $this->lisseners[$this->nextStreamId] = $subject;
+
+        $this->send(new RequestChannelFrame(
+            $this->nextStreamId,
+            $requestN,
+            $data,
+            $metaData,
+        ));
+        $this->requestNLimit[$this->nextStreamId] = 0;
+
+        $this->nextStreamId += 2;
+
+
+        return $subject->asObservable();
+    }
+
+    public function sendRequestN(int $streamId, int $requestN ): void
+    {
+        $this->send(new RequestNFrame(
+            $this->nextStreamId,
+            $requestN,
+        ));
+    }
+
+    public function cancle(int $streamId ): void
+    {
+        $this->lisseners[$streamId]?->onCompleted();
+
+        $this->send(new CancelFrame(
+            $streamId,
+        ));
     }
 
     public function connect(ConnectionSettings $settings = new ConnectionSettings(), DataDTO $data = null, DataDTO $metaData = null): void
@@ -198,6 +228,10 @@ abstract class RSocketConnection
         }
 
         $this->frameToSend[] = $frame;
+    }
+
+    public function getData($streamId): ?Observable {
+        return $this->lisseners[$streamId]?->asObservable() ?? null;
     }
 
     /**
@@ -313,9 +347,16 @@ abstract class RSocketConnection
                     $frame instanceof FireAndForgetFrame
                     || $frame instanceof RequestResponseFrame
                     || $frame instanceof RequestStreamFrame
+                    || $frame instanceof RequestChannelFrame
                 ) {
                     if ($frame instanceof RequestStreamFrame) {
                         $this->requestNLimit[$frame->streamId()] = $frame->getRequestN();
+                    }
+
+                    if ($frame instanceof RequestChannelFrame) {
+                        $this->requestNLimit[$frame->streamId()] = $frame->getRequestN();
+                        $subject = new Subject();
+                        $this->lisseners[$this->nextStreamId] = $subject;
                     }
                     $this->recivedRequestSubject->onNext($frame);
                 }
