@@ -13,7 +13,10 @@ class WorkerGenerator
             'id' => $faker->uuid(),
             'name' => $faker->name(),
             'email' => $faker->email(),
+            'role' => $faker->randomElement(['HR','seller','workMan','accounting']),
             'phoneNumber' => $faker->phoneNumber(),
+            'salary' => $faker->numberBetween(2000, 10000),
+            'currency' => $faker->randomElement(['PLN','EUR','GBP','USD'])
         ];
     }
 }

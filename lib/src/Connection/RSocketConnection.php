@@ -125,7 +125,7 @@ abstract class RSocketConnection
 
     }
 
-    public function requestChannel(int $requestN, string $data, string $metaData = null): Observable
+    public function requestChannel(int $requestN, string $data, string $metaData = null): ChannelRequest
     {
         $subject = new Subject();
         $this->lisseners[$this->nextStreamId] = $subject;
@@ -138,16 +138,20 @@ abstract class RSocketConnection
         ));
         $this->requestNLimit[$this->nextStreamId] = 0;
 
+        $channelRequest = new ChannelRequest(
+            $this->nextStreamId,
+            $subject->asObservable()
+        );
         $this->nextStreamId += 2;
 
 
-        return $subject->asObservable();
+        return $channelRequest;
     }
 
     public function sendRequestN(int $streamId, int $requestN ): void
     {
         $this->send(new RequestNFrame(
-            $this->nextStreamId,
+            $streamId,
             $requestN,
         ));
     }
@@ -356,7 +360,7 @@ abstract class RSocketConnection
                     if ($frame instanceof RequestChannelFrame) {
                         $this->requestNLimit[$frame->streamId()] = $frame->getRequestN();
                         $subject = new Subject();
-                        $this->lisseners[$this->nextStreamId] = $subject;
+                        $this->lisseners[$frame->streamId()] = $subject;
                     }
                     $this->recivedRequestSubject->onNext($frame);
                 }
@@ -365,7 +369,7 @@ abstract class RSocketConnection
                     $subject = $this->lisseners[$frame->streamId()] ?? null;
                     if ($subject) {
                         if ($frame->next()) {
-                            $subject->onNext(new PayloadDTO($frame->getData(), $frame->getMetaData()));
+                            $subject->onNext(new PayloadDTO($frame->streamId(), $frame->getData(), $frame->getMetaData()));
                         }
                         if ($frame->complete()) {
                             if (isset($this->requestNLimit[$frame->streamId()])) {

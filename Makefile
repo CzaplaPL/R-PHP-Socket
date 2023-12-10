@@ -1,8 +1,11 @@
 build:
 	docker compose build
 composer:
-	docker compose run main composer install
-	docker compose run workers composer install
+	#docker compose run main composer install
+	#docker compose run workers composer install
+	#docker compose run currency composer install
+	#docker compose run bonuses composer install
+	docker compose run provision composer install
 run:
 	docker compose up
 createNetwork:

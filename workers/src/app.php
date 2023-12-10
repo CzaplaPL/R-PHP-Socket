@@ -12,7 +12,7 @@ echo 'elo app worker';
 $server = (new ConnectionBuilder())->setAddress('172.26.0.2:9091')->createServer();
 $server->bind();
 
-\React\EventLoop\Loop::get()->addPeriodicTimer(1, function () use ($server){
+Loop::get()->addPeriodicTimer(5, function () use ($server){
     if($server->getConnections()){
         $worker = WorkerGenerator::generate();
         foreach ($server->getConnections() as $connection) {

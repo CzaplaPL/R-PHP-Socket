@@ -16,9 +16,13 @@ services:
       - ./docker/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
     depends_on:
       - workers
+      - currency
+      - bonuses
     networks:
       - app-nginx-proxy
     entrypoint: ["php", "-d", "memory_limit=-1", "src/app.php"]
+    environment:
+      - PHP_IDE_CONFIG=serverName=localhost
 
   workers:
     container_name: workers-dev
@@ -31,12 +35,69 @@ services:
     volumes:
       - ./workers:/var/www/app
       - ./lib:/var/www/app/lib
-      - ./docker/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+#      - ./docker/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
     networks:
       app-nginx-proxy:
         ipv4_address: 172.26.0.2
     entrypoint: ["php", "-d", "memory_limit=-1", "src/app.php"]
 
+  currency:
+    container_name: currency-dev
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: currency-dev
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ./currency:/var/www/app
+      - ./lib:/var/www/app/lib
+#      - ./docker/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+    networks:
+      app-nginx-proxy:
+        ipv4_address: 172.26.0.3
+    entrypoint: ["php", "-d", "memory_limit=-1", "src/app.php"]
+    environment:
+      - PHP_IDE_CONFIG=serverName=localhost
+  bonuses:
+    container_name: bonuses-dev
+    depends_on:
+      - workers
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: bonuses-dev
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ./bonuses:/var/www/app
+      - ./lib:/var/www/app/lib
+#      - ./docker/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+    networks:
+      app-nginx-proxy:
+        ipv4_address: 172.26.0.4
+    entrypoint: ["php", "-d", "memory_limit=-1", "src/app.php"]
+    environment:
+      - PHP_IDE_CONFIG=serverName=localhost
+
+  provision:
+    container_name: provision-dev
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    image: provision-dev
+    extra_hosts:
+      - host.docker.internal:host-gateway
+    volumes:
+      - ./provision:/var/www/app
+      - ./lib:/var/www/app/lib
+#      - ./docker/xdebug.ini:/usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+    networks:
+      app-nginx-proxy:
+        ipv4_address: 172.26.0.5
+    entrypoint: [ "php", "-d", "memory_limit=-1", "src/app.php" ]
+    environment:
+      - PHP_IDE_CONFIG=serverName=localhost
 networks:
   app-nginx-proxy:
     name: app-nginx-proxy
