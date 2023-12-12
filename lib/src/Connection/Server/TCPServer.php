@@ -49,7 +49,7 @@ final class TCPServer implements IRSocketServer
         $this->settings = $settings;
         $this->server = new SocketServer($this->url->getAddress());
         $this->server->on('connection', function (ConnectionInterface $connection): void {
-            $id = Uuid::uuid4();
+            $id = Uuid::uuid4()->toString();
             $newConection = new TCPRSocketConnection($id, $connection, $this->frameFactory, $this->settings);
             $newConection->onConnect()->takeUntil($this->subscriptions)->subscribe(function (SetupFrame $setupFrame) use ($newConection): void {
                 $this->newConnectionsSubject->onNext(new NewConnection($newConection, $setupFrame));
@@ -57,12 +57,12 @@ final class TCPServer implements IRSocketServer
             $newConection->onClose()->takeUntil($this->subscriptions)->subscribe(
                 function (ClosedConnection $closedConnection): void {
                     if (false === $closedConnection->connection->isReasumeEnable()) {
-                        unset($this->connections[$closedConnection->connection->id->toString()]);
+                        unset($this->connections[$closedConnection->connection->reasumeToken]);
                     }
                     $this->closedConnectionsSubject->onNext($closedConnection);
                 }
             );
-            $this->connections[$id->toString()] = $newConection;
+            $this->connections[$id] = $newConection;
         });
         if ($errorHandler) {
             $this->server->on('error', $errorHandler);

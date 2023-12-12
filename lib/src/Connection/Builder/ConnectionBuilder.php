@@ -9,7 +9,6 @@ use App\Connection\Client\TCPClient;
 use App\Connection\Client\WSClient;
 use App\Connection\Server\IRSocketServer;
 use App\Connection\Server\TCPServer;
-use App\Connection\Server\WSServer;
 use App\Core\Enums\ConnectionType;
 use App\Core\Url;
 use App\Frame\Factory\FrameFactory;
@@ -200,10 +199,6 @@ final class ConnectionBuilder implements IConnectionBuilder
 
     public function createServer(): IRSocketServer
     {
-        if (ConnectionType::WS === $this->url->getConnectionType()) {
-            return new WSServer();
-        }
-
         return new TCPServer($this->url, $this->frameFactory);
     }
 

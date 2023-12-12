@@ -8,7 +8,7 @@ use App\Connection\TCPRSocketConnection;
 use App\Core\Exception\ConnectionFailedException;
 use App\Core\Url;
 use App\Frame\Factory\IFrameFactory;
-use App\Frame\ReasumeFrame;
+use Exception;
 use Ramsey\Uuid\Uuid;
 use React\Promise\Promise;
 use React\Promise\PromiseInterface;
@@ -47,10 +47,11 @@ final class TCPClient implements IRSocketClient
         });
     }
 
-    public function reasume(): PromiseInterface{
+    public function reasume(): PromiseInterface
+    {
         return new Promise(function (callable $resolver, callable $reject): void {
-            if(!$this->token){
-                $reject();
+            if (!$this->token) {
+                $reject(new Exception());
             }
             $this->connector->connect($this->url->getAddress())
                 ->then(
@@ -64,7 +65,5 @@ final class TCPClient implements IRSocketClient
                     }
                 );
         });
-
-
     }
 }

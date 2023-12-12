@@ -27,7 +27,6 @@ use App\Frame\RequestNFrame;
 use App\Frame\RequestResponseFrame;
 use App\Frame\RequestStreamFrame;
 use App\Frame\SetupFrame;
-use Ramsey\Uuid\UuidInterface;
 use Ratchet\Client\WebSocket;
 use React\EventLoop\Loop;
 use React\EventLoop\TimerInterface;
@@ -98,7 +97,6 @@ abstract class RSocketConnection
             $metaData,
         ));
 
-
         $this->nextStreamId += 2;
     }
 
@@ -134,7 +132,6 @@ abstract class RSocketConnection
             $metaData,
         ));
 
-
         $channelRequest = new ChannelRequest(
             $this->nextStreamId,
             $subject->asObservable()
@@ -143,7 +140,6 @@ abstract class RSocketConnection
         $this->nextStreamId += 2;
 
         return $channelRequest;
-
     }
 
     public function requestChannel(int $requestN, string $data, string $metaData = null): ChannelRequest
@@ -165,11 +161,10 @@ abstract class RSocketConnection
         );
         $this->nextStreamId += 2;
 
-
         return $channelRequest;
     }
 
-    public function sendRequestN(int $streamId, int $requestN ): void
+    public function sendRequestN(int $streamId, int $requestN): void
     {
         $this->send(new RequestNFrame(
             $streamId,
@@ -177,9 +172,9 @@ abstract class RSocketConnection
         ));
     }
 
-    public function cancle(int $streamId ): void
+    public function cancle(int $streamId): void
     {
-        $this->lisseners[$streamId]?->onCompleted();
+        $this->lisseners[$streamId]->onCompleted();
 
         $this->send(new CancelFrame(
             $streamId,
@@ -251,7 +246,7 @@ abstract class RSocketConnection
             $this->sendedFrame[] = $frame;
 
             $this->send($frame);
-            if(isset($this->leaseMenager)){
+            if (isset($this->leaseMenager)) {
                 $this->leaseMenager->send();
             }
 
@@ -261,9 +256,10 @@ abstract class RSocketConnection
         $this->frameToSend[] = $frame;
     }
 
-    public function reasume(): void {
+    public function reasume(): void
+    {
         $recivedPosition = 0;
-        foreach ($this->recivedFrames as $recivedFrame){
+        foreach ($this->recivedFrames as $recivedFrame) {
             $recivedPosition += strlen($recivedFrame->serialize());
         }
 
@@ -274,8 +270,9 @@ abstract class RSocketConnection
         ));
     }
 
-    public function getData($streamId): ?Observable {
-        return $this->lisseners[$streamId]?->asObservable() ?? null;
+    public function getData(int $streamId): ?Observable
+    {
+        return $this->lisseners[$streamId]->asObservable();
     }
 
     /**
@@ -333,12 +330,12 @@ abstract class RSocketConnection
             return;
         }
 
-        if($frame->leaseEnable){
+        if ($frame->leaseEnable) {
             $this->leaseMenager = new LeaseMenager();
         }
 
         $this->reasumeEnable = $frame->reasumeEnable;
-        $this->reasumeToken = $frame->reasumeToken;
+        $this->reasumeToken = $frame->reasumeToken ?? '';
 
         $this->connectIsSetuped = true;
         $this->setupKeepAlive($frame);
@@ -368,14 +365,14 @@ abstract class RSocketConnection
         }
     }
 
-    private function reasumeConnection(ReasumeFrame $frame):void
+    private function reasumeConnection(ReasumeFrame $frame): void
     {
         $recivedPosition = 0;
-        foreach ($this->recivedFrames as $recivedFrame){
+        foreach ($this->recivedFrames as $recivedFrame) {
             $recivedPosition += strlen($recivedFrame->serialize());
         }
 
-        if(  $frame->availablePosition > $recivedPosition) {
+        if ($frame->availablePosition > $recivedPosition) {
             $this->send(new ErrorFrame(
                 1,
                 ErrorType::REJECTED_RESUME
@@ -387,7 +384,6 @@ abstract class RSocketConnection
         ));
 
         $this->connectIsSetuped = true;
-
     }
 
     private function handleData(string $data): void
@@ -415,7 +411,7 @@ abstract class RSocketConnection
                 }
 
                 if ($frame instanceof LeaseFrame) {
-                    if(isset($this->leaseMenager)){
+                    if (isset($this->leaseMenager)) {
                         $this->leaseMenager->setNewLimit($frame);
                     }
                     continue;
@@ -470,13 +466,13 @@ abstract class RSocketConnection
         }
     }
 
-    private function canSend($streamId): bool
+    private function canSend(int $streamId): bool
     {
         if (isset($this->requestNLimit[$streamId])) {
             return $this->requestNLimit[$streamId] > 0;
         }
 
-        if(isset($this->leaseMenager)){
+        if (isset($this->leaseMenager)) {
             return $this->leaseMenager->canSend();
         }
 
@@ -533,21 +529,17 @@ abstract class RSocketConnection
 
         $this->requestNLimit[$frame->streamId()] += $frame->requestN;
 
-        if (!$this->canSend($frame->streamId())) {
-            return;
-        }
-
         $keyToUnsset = [];
         foreach ($this->frameToSend as $key => $frameToSend) {
             if ($frameToSend->streamId() !== $frame->streamId()) {
                 continue;
             }
 
-            if (!$this->canSend($frame->streamId())) {
+            if (false === $this->canSend($frame->streamId())) {
                 break;
             }
 
-            if(isset($this->leaseMenager)){
+            if (isset($this->leaseMenager)) {
                 $this->leaseMenager->send();
             }
 
@@ -559,6 +551,4 @@ abstract class RSocketConnection
             unset($this->frameToSend[$key]);
         }
     }
-
-
 }

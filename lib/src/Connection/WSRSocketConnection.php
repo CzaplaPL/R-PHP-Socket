@@ -15,11 +15,11 @@ class WSRSocketConnection extends RSocketConnection
 
     protected function send(Frame $frame): bool
     {
-       return  true;
+        return $this->connection->write($frame->serialize());
     }
 
     protected function end(Frame $frame): void
     {
-        // TODO: Implement end() method.
+        $this->connection->end($frame->serialize());
     }
 }

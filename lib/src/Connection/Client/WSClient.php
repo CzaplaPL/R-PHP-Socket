@@ -4,24 +4,25 @@ declare(strict_types=1);
 
 namespace App\Connection\Client;
 
-use App\Connection\TCPRSocketConnection;
 use App\Connection\WSRSocketConnection;
-use App\Core\DataDTO;
 use App\Core\Exception\ConnectionFailedException;
 use App\Core\Url;
 use App\Frame\Factory\IFrameFactory;
-use App\Frame\SetupFrame;
-use Ratchet\Client\WebSocket;
-use Ratchet\ConnectionInterface;
-use React\Promise\PromiseInterface;
-use React\Promise\Promise;
+use PHPUnit\Util\Exception;
 use Ramsey\Uuid\Uuid;
 use Ratchet\Client\Connector;
+use Ratchet\Client\WebSocket;
+use React\Promise\Promise;
+use React\Promise\PromiseInterface;
 use Throwable;
 
+/**
+ * @psalm-suppress TooManyTemplateParams
+ *
+ * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
+ */
 final class WSClient implements IRSocketClient
 {
-
     private ?string $token = null;
 
     /**
@@ -36,8 +37,6 @@ final class WSClient implements IRSocketClient
         private readonly array $headers
     ) {
     }
-
-
 
     public function connect(): PromiseInterface
     {
@@ -56,10 +55,11 @@ final class WSClient implements IRSocketClient
         });
     }
 
-    public function reasume(): PromiseInterface{
+    public function reasume(): PromiseInterface
+    {
         return new Promise(function (callable $resolver, callable $reject): void {
-            if(!$this->token){
-                $reject();
+            if (!$this->token) {
+                $reject(new Exception());
             }
             $connector = $this->connector;
             $connector($this->url->getAddress(), $this->subProtocols, $this->headers)
@@ -75,5 +75,4 @@ final class WSClient implements IRSocketClient
                 );
         });
     }
-
 }

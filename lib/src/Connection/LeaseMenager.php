@@ -1,5 +1,7 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Connection;
 
 use App\Frame\LeaseFrame;
@@ -9,8 +11,7 @@ class LeaseMenager
     public function __construct(
         private int $limit = 0,
         private int $ttl = 0
-    )
-    {
+    ) {
     }
 
     public function setNewLimit(LeaseFrame $frame): void
@@ -34,6 +35,6 @@ class LeaseMenager
 
     public function send(): void
     {
-        $this->limit -=1;
+        --$this->limit;
     }
 }

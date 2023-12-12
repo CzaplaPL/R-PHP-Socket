@@ -4,11 +4,7 @@ declare(strict_types=1);
 
 namespace App\Frame;
 
-use App\Connection\Client\ConnectionSettings;
 use App\Core\ArrayBuffer;
-use App\Core\DataDTO;
-use App\Core\Exception\WrongConfigurationException;
-use JetBrains\PhpStorm\Pure;
 
 /**
  * @SuppressWarnings(PHPMD.BooleanArgumentFlag)
@@ -20,12 +16,9 @@ final class ReasumeFrame extends Frame
         public readonly string $reasumeToken,
         public readonly int $receivedPosition,
         public readonly int $availablePosition,
-
-    )
-    {
+    ) {
         parent::__construct(self::SETUP_STREAM_ID);
     }
-
 
     public function serialize(): string
     {
@@ -47,7 +40,6 @@ final class ReasumeFrame extends Frame
 
         return $toReturn;
     }
-
 
     private function generateTypeAndFlags(): int
     {

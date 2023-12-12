@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Frame;
 
 use App\Core\ArrayBuffer;
-use JetBrains\PhpStorm\Pure;
 
 class CancelFrame extends Frame
 {
@@ -21,7 +20,6 @@ class CancelFrame extends Frame
         $buffer->addUInt32($this->streamId);
         $buffer->addUInt16($this->generateTypeAndFlags());
 
-
         return $buffer->toString();
     }
 
@@ -29,6 +27,6 @@ class CancelFrame extends Frame
     {
         $value = 9;
 
-        return $value  << 10;
+        return $value << 10;
     }
 }

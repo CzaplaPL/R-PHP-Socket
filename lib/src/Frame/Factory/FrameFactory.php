@@ -27,7 +27,7 @@ class FrameFactory implements IFrameFactory
     public function create(string $data): Frame
     {
         $stringArray = str_split($data);
-        $buffer = new ArrayBuffer(array_map(static fn($char) => ord($char), $stringArray));
+        $buffer = new ArrayBuffer(array_map(static fn ($char) => ord($char), $stringArray));
         $offset = 0;
         $streamId = $buffer->getUInt32($offset);
         $offset += 4;
@@ -156,7 +156,7 @@ class FrameFactory implements IFrameFactory
         );
     }
 
-    private function createKeepAliveType(ArrayBuffer $buffer, int $offset, int $streamId, string $data)
+    private function createKeepAliveType(ArrayBuffer $buffer, int $offset, int $streamId, string $data): KeepAliveFrame
     {
         if (0 !== $streamId) {
             throw CreateFrameException::wrongStreamIdToKeepAliveFrame($streamId);
@@ -283,7 +283,6 @@ class FrameFactory implements IFrameFactory
 
     private function createCancelType(ArrayBuffer $buffer, int $offset, int $streamId, string $data): CancelFrame
     {
-
         return new CancelFrame(
             $streamId,
         );
@@ -297,7 +296,6 @@ class FrameFactory implements IFrameFactory
 
         $offset += 2;
 
-
         $majorVersion = $buffer->getUInt16($offset);
         $offset += 2;
 
@@ -308,7 +306,6 @@ class FrameFactory implements IFrameFactory
             throw CreateFrameOnUnsuportedVersionException::versionNotSuported($majorVersion, $minorVersion);
         }
 
-
         $reasumeTokenLenght = $buffer->getUInt16($offset);
         $offset += 2;
 
@@ -316,9 +313,10 @@ class FrameFactory implements IFrameFactory
         $offset += $reasumeTokenLenght + 4;
 
         $receivedPosition = $buffer->getUInt32($offset);
-        $offset +=  8;
+        $offset += 8;
 
         $availablePosidtion = $buffer->getUInt32($offset);
+
         return new ReasumeFrame(
             $reasumeTokem,
             $receivedPosition,

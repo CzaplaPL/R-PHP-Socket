@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace App\Frame;
 
 use App\Core\ArrayBuffer;
-use JetBrains\PhpStorm\Pure;
 
 class LeaseFrame extends Frame
 {
