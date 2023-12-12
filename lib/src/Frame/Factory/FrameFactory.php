@@ -13,7 +13,9 @@ use App\Frame\ErrorFrame;
 use App\Frame\FireAndForgetFrame;
 use App\Frame\Frame;
 use App\Frame\KeepAliveFrame;
+use App\Frame\LeaseFrame;
 use App\Frame\PayloadFrame;
+use App\Frame\ReasumeFrame;
 use App\Frame\RequestChannelFrame;
 use App\Frame\RequestNFrame;
 use App\Frame\RequestResponseFrame;
@@ -25,7 +27,7 @@ class FrameFactory implements IFrameFactory
     public function create(string $data): Frame
     {
         $stringArray = str_split($data);
-        $buffer = new ArrayBuffer(array_map(static fn ($char) => ord($char), $stringArray));
+        $buffer = new ArrayBuffer(array_map(static fn($char) => ord($char), $stringArray));
         $offset = 0;
         $streamId = $buffer->getUInt32($offset);
         $offset += 4;
@@ -34,6 +36,7 @@ class FrameFactory implements IFrameFactory
 
         return match ($type) {
             1 => $this->createSetupType($buffer, $offset, $streamId, $data),
+            2 => $this->createLeaseType($buffer, $offset, $streamId, $data),
             3 => $this->createKeepAliveType($buffer, $offset, $streamId, $data),
             4 => $this->createRequestResponseType($buffer, $offset, $streamId, $data),
             5 => $this->createFnFType($buffer, $offset, $streamId, $data),
@@ -43,6 +46,7 @@ class FrameFactory implements IFrameFactory
             9 => $this->createCancelType($buffer, $offset, $streamId, $data),
             10 => $this->createPayloadType($buffer, $offset, $streamId, $data),
             11 => $this->createErrorType($buffer, $offset, $streamId, $data),
+            13 => $this->createReasumeType($buffer, $offset, $streamId, $data),
             default => throw CreateFrameException::unknowType($type)
         };
     }
@@ -282,6 +286,60 @@ class FrameFactory implements IFrameFactory
 
         return new CancelFrame(
             $streamId,
+        );
+    }
+
+    private function createReasumeType(ArrayBuffer $buffer, int $offset, int $streamId, string $data): ReasumeFrame
+    {
+        if (0 !== $streamId) {
+            throw CreateFrameException::wrongStreamIdToSetupFrame($streamId);
+        }
+
+        $offset += 2;
+
+
+        $majorVersion = $buffer->getUInt16($offset);
+        $offset += 2;
+
+        $minorVersion = $buffer->getUInt16($offset);
+        $offset += 2;
+
+        if (Frame::MAJOR_VERSION !== $majorVersion || Frame::MINOR_VERSION !== $minorVersion) {
+            throw CreateFrameOnUnsuportedVersionException::versionNotSuported($majorVersion, $minorVersion);
+        }
+
+
+        $reasumeTokenLenght = $buffer->getUInt16($offset);
+        $offset += 2;
+
+        $reasumeTokem = substr($data, $offset, $reasumeTokenLenght);
+        $offset += $reasumeTokenLenght + 4;
+
+        $receivedPosition = $buffer->getUInt32($offset);
+        $offset +=  8;
+
+        $availablePosidtion = $buffer->getUInt32($offset);
+        return new ReasumeFrame(
+            $reasumeTokem,
+            $receivedPosition,
+            $availablePosidtion
+        );
+    }
+
+    private function createLeaseType(ArrayBuffer $buffer, int $offset, int $streamId, string $data): LeaseFrame
+    {
+        if (0 !== $streamId) {
+            throw CreateFrameException::wrongStreamIdToSetupFrame($streamId);
+        }
+
+        $offset += 2;
+        $ttl = $buffer->getUInt32($offset);
+        $offset += 4;
+        $limit = $buffer->getUInt32($offset);
+
+        return new LeaseFrame(
+            $ttl,
+            $limit
         );
     }
 }

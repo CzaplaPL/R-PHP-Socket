@@ -9,4 +9,6 @@ use React\Promise\PromiseInterface;
 interface IRSocketClient
 {
     public function connect(): PromiseInterface;
+
+    public function reasume(): PromiseInterface;
 }

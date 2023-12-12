@@ -8,6 +8,7 @@ use App\Connection\TCPRSocketConnection;
 use App\Core\Exception\ConnectionFailedException;
 use App\Core\Url;
 use App\Frame\Factory\IFrameFactory;
+use App\Frame\ReasumeFrame;
 use Ramsey\Uuid\Uuid;
 use React\Promise\Promise;
 use React\Promise\PromiseInterface;
@@ -23,6 +24,7 @@ use Throwable;
 final class TCPClient implements IRSocketClient
 {
     private IFrameFactory $frameFactory;
+    private ?string $token = null;
 
     public function __construct(private readonly ConnectorInterface $connector, private readonly Url $url, IFrameFactory $frameFactory)
     {
@@ -35,12 +37,34 @@ final class TCPClient implements IRSocketClient
             $this->connector->connect($this->url->getAddress())
                 ->then(
                     onFulfilled: function (ConnectionInterface $connection) use ($resolver): void {
-                        $resolver(new TCPRSocketConnection(Uuid::uuid4(), $connection, $this->frameFactory));
+                        $this->token = Uuid::uuid4()->toString();
+                        $resolver(new TCPRSocketConnection($this->token, $connection, $this->frameFactory));
                     },
                     onRejected: function (Throwable $error) use ($reject): void {
                         $reject(ConnectionFailedException::errorOnConnecting($this->url->getAddress(), $error));
                     }
                 );
         });
+    }
+
+    public function reasume(): PromiseInterface{
+        return new Promise(function (callable $resolver, callable $reject): void {
+            if(!$this->token){
+                $reject();
+            }
+            $this->connector->connect($this->url->getAddress())
+                ->then(
+                    onFulfilled: function (ConnectionInterface $connection) use ($resolver): void {
+                        $connection = new TCPRSocketConnection($this->token, $connection, $this->frameFactory);
+                        $connection->reasume();
+                        $resolver($connection);
+                    },
+                    onRejected: function (Throwable $error) use ($reject): void {
+                        $reject(ConnectionFailedException::errorOnConnecting($this->url->getAddress(), $error));
+                    }
+                );
+        });
+
+
     }
 }

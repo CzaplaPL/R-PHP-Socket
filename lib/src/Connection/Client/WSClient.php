@@ -4,19 +4,26 @@ declare(strict_types=1);
 
 namespace App\Connection\Client;
 
+use App\Connection\TCPRSocketConnection;
 use App\Connection\WSRSocketConnection;
 use App\Core\DataDTO;
 use App\Core\Exception\ConnectionFailedException;
 use App\Core\Url;
 use App\Frame\Factory\IFrameFactory;
 use App\Frame\SetupFrame;
+use Ratchet\Client\WebSocket;
+use Ratchet\ConnectionInterface;
+use React\Promise\PromiseInterface;
+use React\Promise\Promise;
 use Ramsey\Uuid\Uuid;
 use Ratchet\Client\Connector;
-use React\Promise\Promise;
 use Throwable;
 
 final class WSClient implements IRSocketClient
 {
+
+    private ?string $token = null;
+
     /**
      * @param mixed[] $subProtocols
      * @param mixed[] $headers
@@ -30,35 +37,43 @@ final class WSClient implements IRSocketClient
     ) {
     }
 
-    public function connect(
-        ConnectionSettings $settings = new ConnectionSettings(),
-        DataDTO $data = null,
-        DataDTO $metaData = null
-    ): Promise {
-        $setupFrame = SetupFrame::fromSettings($settings);
 
-        if ($data) {
-            $setupFrame = $setupFrame->setData($data);
-        }
-        if ($metaData) {
-            $setupFrame = $setupFrame->setMetaData($metaData);
-        }
 
-        return new Promise(function (callable $resolver, callable $reject) use ($setupFrame): void {
+    public function connect(): PromiseInterface
+    {
+        return new Promise(function (callable $resolver, callable $reject): void {
             $connector = $this->connector;
-            $connector($this->url->getAddress(), $this->subProtocols, $this->headers)->then(
-                onFulfilled: function ($connection) use ($resolver, $reject, $setupFrame): void {
-                    try {
-                        $connection->send($setupFrame->serialize());
-                        $resolver(new WSRSocketConnection(Uuid::uuid4(), $connection, $this->frameFactory));
-                    } catch (Throwable $error) {
-                        $reject(ConnectionFailedException::errorOnSendSetupFrame($error));
+            $connector($this->url->getAddress(), $this->subProtocols, $this->headers)
+                ->then(
+                    onFulfilled: function (WebSocket $connection) use ($resolver): void {
+                        $this->token = Uuid::uuid4()->toString();
+                        $resolver(new WSRSocketConnection($this->token, $connection, $this->frameFactory));
+                    },
+                    onRejected: function (Throwable $error) use ($reject): void {
+                        $reject(ConnectionFailedException::errorOnConnecting($this->url->getAddress(), $error));
                     }
-                },
-                onRejected: function (Throwable $error) use ($reject): void {
-                    $reject(ConnectionFailedException::errorOnConnecting($this->url->getAddress(), $error));
-                }
-            );
+                );
         });
     }
+
+    public function reasume(): PromiseInterface{
+        return new Promise(function (callable $resolver, callable $reject): void {
+            if(!$this->token){
+                $reject();
+            }
+            $connector = $this->connector;
+            $connector($this->url->getAddress(), $this->subProtocols, $this->headers)
+                ->then(
+                    onFulfilled: function (WebSocket $connection) use ($resolver): void {
+                        $connection = new WSRSocketConnection($this->token, $connection, $this->frameFactory);
+                        $connection->reasume();
+                        $resolver($connection);
+                    },
+                    onRejected: function (Throwable $error) use ($reject): void {
+                        $reject(ConnectionFailedException::errorOnConnecting($this->url->getAddress(), $error));
+                    }
+                );
+        });
+    }
+
 }

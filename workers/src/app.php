@@ -15,6 +15,7 @@ $server->bind();
 Loop::get()->addPeriodicTimer(5, function () use ($server){
     if($server->getConnections()){
         $worker = WorkerGenerator::generate();
+
         foreach ($server->getConnections() as $connection) {
             $connection->fireAndForget(json_encode($worker));
         }

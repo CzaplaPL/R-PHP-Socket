@@ -45,33 +45,45 @@ $provisionConnection = await($provisionClient->connect());
 $provisionConnection->connect(new ConnectionSettings());
 
 
-$request = $provisionConnection->requestChannel(50, '');
+$provisionRequest = $provisionConnection->requestChannel(50, '');
 
-$request->response->subscribe(function (PayloadDTO $payload) use (&$workers){
+$provisionRequest->response->subscribe(function (PayloadDTO $payload) use (&$workers) {
     $provisions = json_decode($payload->data, true);
     foreach ($provisions as $key => $provision) {
         $workers[$key]['provision'] += $provision;
     }
 });
 
-$workersConnection->onRecivedRequest()->subscribe(function (FireAndForgetFrame $frame) use (&$workers, $provisionConnection,$request) {
+$workersConnection->onRecivedRequest()->subscribe(function (FireAndForgetFrame $frame) use (&$workers, $provisionConnection, $provisionRequest) {
     $worker = json_decode($frame->getData(), true);
     $worker['bonus'] = 0;
     $worker['provision'] = 0;
     $workers[$worker['id']] = $worker;
 
-    if($worker['role'] === 'seller'){
-        echo 'wysylam';
-        var_dump($worker);
-        $provisionConnection->sendResponse($request->streamId, json_encode($worker));
+    if ($worker['role'] === 'seller') {
+        $provisionConnection->sendResponse($provisionRequest->streamId, json_encode($worker));
     }
 });
-$bonusesConnection->requestStream(50, '')->subscribe(function (PayloadDTO $payload) use (&$workers) {
-    $bonuses = json_decode($payload->data, true);
-    foreach ($bonuses as $key => $bonus) {
-        $workers[$key]['bonus'] = $workers[$key]['bonus'] + $bonus;
-    }
-});
+
+$bonusStreamRequestN = 10;
+$bonusStream = $bonusesConnection->requestStream($bonusStreamRequestN, '');
+$bonusStream->response->subscribe(
+    function (PayloadDTO $payload) use (&$workers, &$bonusStreamRequestN) {
+        $bonusStreamRequestN -= 1;
+
+        $bonuses = json_decode($payload->data, true);
+        foreach ($bonuses as $key => $bonus) {
+            $workers[$key]['bonus'] = $workers[$key]['bonus'] + $bonus;
+        }
+    });
+
+Loop::get()->addPeriodicTimer(1,
+    function () use (&$bonusStreamRequestN, $bonusesConnection, $bonusStream) {
+        if ($bonusStreamRequestN <= 2) {
+            $bonusStreamRequestN += 10;
+            $bonusesConnection->sendRequestN($bonusStream->streamId, 10);
+        }
+    });
 
 
 Loop::get()->addPeriodicTimer(10, function () use (&$workers, $currencyConnection) {
